@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: dictionary
+server:
+  servlet:
+    context-path: /dictionary
+  port: 8380
