@@ -1,0 +1,14 @@
+version: '2.1'
+
+services:
+  app:
+    image: 'dictionary:latest'
+    build:
+      context: .
+    container_name: app
+    environment:
+      - SPRING_ACTIVE_PROFILE=DEV
+    ports:
+      - "8080:8080"
+    expose:
+      - 8080
