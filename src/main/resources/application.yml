@@ -1,10 +1,7 @@
 spring:
   application:
     name: dictionary
-
-  mvc:
-    pathmatch:
-      matching-strategy=ant_path_matcher:server:
+server:
   servlet:
     context-path: /dictionary
   port: 8080
