@@ -6,8 +6,8 @@ import com.usb.dictionary.entry.event.EntryModified;
 import com.usb.dictionary.entry.model.Entry;
 import com.usb.dictionary.entry.model.EntryDto;
 import com.usb.dictionary.entry.model.Translation;
-import com.usb.dictionary.entry.repository.elasticsearch.EntryElasticsearchRepository;
-import com.usb.dictionary.entry.repository.mongo.EntryMongoRepository;
+import com.usb.dictionary.entry.repository.elasticsearch.EntryFullTextSearchRepository;
+import com.usb.dictionary.entry.repository.mongo.EntryMainStorageRepository;
 import com.usb.dictionary.entry.service.EntryService;
 import com.usb.dictionary.entry.service.request.SaveEntryServiceRequest;
 import com.usb.dictionary.entry.service.request.SearchEntry;
@@ -20,21 +20,21 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EntryServiceImpl implements EntryService {
 
-    private final EntryMongoRepository entryMongoRepository;
+    private final EntryMainStorageRepository entryMainStorageRepository;
 
-    private final EntryElasticsearchRepository entryElasticsearchRepository;
+    private final EntryFullTextSearchRepository entryFullTextSearchRepository;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
@@ -44,28 +44,50 @@ public class EntryServiceImpl implements EntryService {
 
     @Override
     public SearchEntryResult search(SearchEntry searchEntry){
-        Page<Entry> result = this.entryElasticsearchRepository.findByWordAndSourceLanguageCode(searchEntry.getWord()
-                , searchEntry.getSourceLanguageCode()
-                , PageRequest.of(searchEntry.getPage(), pageSize));
-        SearchEntryResult searchEntryResult = SearchEntryResult.builder().entries(result.getContent().stream()
+        String word = searchEntry.getWord();
+        String sourceLanguageCode = searchEntry.getSourceLanguageCode();
+        PageRequest page = PageRequest.of(searchEntry.getPage(), pageSize);
+        Page<Entry> result = this.entryFullTextSearchRepository.findByWordAndSourceLanguageCode(word
+                , sourceLanguageCode
+                , page);
+        Page<Entry> resultAlternatives = null;
+        if(result.isEmpty()){
+            resultAlternatives = this.entryFullTextSearchRepository.findByWordAndSourceLanguageCodeWithFuzzy(word
+                    , sourceLanguageCode
+                    , page);
+        }
+        SearchEntryResult searchEntryResult = SearchEntryResult.builder()
+                .entries(mapEntries(result)).entriesAlternatives(mapEntries(resultAlternatives))
+                .build();
+        log.info("message=\"entry search result word:{}, sourceLanguageCode:{}, result:{}\"" +
+                ", feature=EntryServiceImpl, method=search"
+                , word
+                , sourceLanguageCode
+                , searchEntryResult);
+        return searchEntryResult;
+    }
+
+    private List<EntryDto> mapEntries(Page<Entry> entries){
+        if(entries==null || isEmpty(entries.getContent())){
+            return emptyList();
+        }
+        return mapEntries(entries.getContent());
+    }
+
+    private List<EntryDto> mapEntries(Collection<Entry> entries) {
+        return entries.stream()
                 .map(entry -> EntryDto.builder().word(entry.getWord())
                         .sourceLanguageCode(entry.getSourceLanguageCode())
                         .type(entry.getType())
                         .translations(entry.getTranslations().stream()
                                 .collect(toMap(Translation::getTargetLanguageCode, Translation::getMeaning))).build())
-                .collect(toList())).build();
-        log.info("message=\"entry search result word:{}, sourceLanguageCode:{}, result:{}\"" +
-                ", feature=EntryServiceImpl, method=search"
-                , searchEntry.getWord()
-                , searchEntry.getSourceLanguageCode()
-                , searchEntryResult);
-        return searchEntryResult;
+                .collect(toList());
     }
 
     @Override
     public void save(SaveEntryServiceRequest saveEntryServiceRequest) {
         Optional<Entry> existingWord
-                = this.entryMongoRepository
+                = this.entryMainStorageRepository
                 .findByWordAndSourceLanguageCode(saveEntryServiceRequest.getWord()
                         , saveEntryServiceRequest.getSourceLanguageCode());
         Entry entry = null;
@@ -75,7 +97,7 @@ public class EntryServiceImpl implements EntryService {
         else {
            entry = createNewEntry(saveEntryServiceRequest);
         }
-        entry = this.entryMongoRepository.save(entry);
+        entry = this.entryMainStorageRepository.save(entry);
         log.info("message=\"entry saved id:{}\", feature=EntryServiceImpl, method=save", entry.getId());
         generateEntryModifiedEventForSave(entry);
     }
@@ -117,10 +139,10 @@ public class EntryServiceImpl implements EntryService {
     }
 
     @KafkaListener(topics = {EntryModified.TOPIC_NAME}, groupId = "dictionary")
-    private void saveEntryToElasticSearch(String stringEntryModified){
+    private void saveEntryToFullTextSearchRepository(String stringEntryModified){
         try {
             EntryModified entryModified = this.objectMapper.readValue(stringEntryModified, EntryModified.class);
-            Optional<Entry> existingWordOptional = this.entryElasticsearchRepository.findByWord(entryModified.getWord());
+            Optional<Entry> existingWordOptional = this.entryFullTextSearchRepository.findByWord(entryModified.getWord());
             Entry entry = null;
             if(existingWordOptional.isPresent()){
                 entry= existingWordOptional.get();
@@ -134,7 +156,7 @@ public class EntryServiceImpl implements EntryService {
                         .word(entryModified.getWord()).translations(new ArrayList<>()).build();
                 entry = updateEntry(entry, entryModified.getTranslations());
             }
-            entry = this.entryElasticsearchRepository.save(entry);
+            entry = this.entryFullTextSearchRepository.save(entry);
             log.info("message=\"entry saved id:{}\", feature=EntryServiceImpl, method=saveEntryToElasticSearch", entry.getId());
         } catch (JsonProcessingException e) {
             log.error("message=\"an error occurred\", feature=EntryServiceImpl, method=entryModifiedEvent", e);

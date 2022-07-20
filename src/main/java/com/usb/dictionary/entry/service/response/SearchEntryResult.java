@@ -18,4 +18,5 @@ public class SearchEntryResult implements Serializable {
     @Serial
     private static final long serialVersionUID = 8147769026956503542L;
     private List<EntryDto> entries;
+    private List<EntryDto> entriesAlternatives;
 }

@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface EntryMongoRepository extends MongoRepository<Entry, String> {
+public interface EntryMainStorageRepository extends MongoRepository<Entry, String> {
     Optional<Entry> findByWordAndSourceLanguageCode(String word, String sourceLanguageCode);
 }
