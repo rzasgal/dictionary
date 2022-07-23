@@ -18,11 +18,6 @@ public class EntryController {
     private final EntryService entryService;
     private final EntryControllerMapper entryControllerMapper;
 
-    @GetMapping
-    public String sayHello(){
-        return "Hello";
-    }
-
     @GetMapping("/search")
     public ResponseEntity<SearchEntryResponse> searchEntry(
             @RequestParam("word") String word

@@ -25,15 +25,19 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.kafka:spring-kafka'
-	// https://mvnrepository.com/artifact/io.springfox/springfox-boot-starter
 	//implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
-	//implementation group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.9.2'
+	//implementation group: 'io.springfox', name: 'springfox-swagger2', version: '3.0.0'
+	//implementation group: 'io.springfox', name: 'springfox-swagger-ui', version: '3.0.0'
 	compileOnly 'org.projectlombok:lombok'
 	compileOnly 'org.mapstruct:mapstruct:1.4.2.Final'
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.2.Final'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo'
+	testImplementation "org.testcontainers:testcontainers:1.17.3"
+	testImplementation "org.testcontainers:junit-jupiter:1.17.3"
+	testImplementation "org.testcontainers:elasticsearch:1.17.3"
 }
 
 tasks.named('test') {
