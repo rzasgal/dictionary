@@ -2,7 +2,6 @@ package com.usb.dictionary.entry.repository.mongo;
 
 import com.usb.dictionary.entry.model.Entry;
 import com.usb.dictionary.entry.repository.elasticsearch.EntryFullTextSearchRepository;
-import com.usb.dictionary.entry.repository.mongo.EntryMainStorageRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,14 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ActiveProfiles("integration-test")
+@TestPropertySource(properties = {"spring.mongodb.embedded.version = 3.6.5"})
 @ExtendWith(SpringExtension.class)
 @DataMongoTest
 class EntryMainStorageSearchRepositoryTest {
