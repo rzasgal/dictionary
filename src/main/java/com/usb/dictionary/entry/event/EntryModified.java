@@ -1,6 +1,5 @@
 package com.usb.dictionary.entry.event;
 
-import com.usb.dictionary.entry.model.EntryDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

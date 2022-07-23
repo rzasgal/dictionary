@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/entry")
 @RequiredArgsConstructor
@@ -36,5 +38,12 @@ public class EntryController {
         this.entryService.save(this.entryControllerMapper.toSaveEntryServiceRequest(saveEntryRequest));
         return ResponseEntity.created( ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand("").toUri()).build();
+    }
+
+
+    @PostMapping(path = "/read-from-file")
+    public ResponseEntity readFromFile() throws IOException {
+        this.entryService.readFromFile();
+        return ResponseEntity.ok().build();
     }
 }

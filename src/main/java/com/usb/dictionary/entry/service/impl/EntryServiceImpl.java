@@ -14,12 +14,23 @@ import com.usb.dictionary.entry.service.request.SearchEntry;
 import com.usb.dictionary.entry.service.response.SearchEntryResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.*;
 
 import static java.util.Collections.emptyList;
@@ -100,6 +111,34 @@ public class EntryServiceImpl implements EntryService {
         entry = this.entryMainStorageRepository.save(entry);
         log.info("message=\"entry saved id:{}\", feature=EntryServiceImpl, method=save", entry.getId());
         generateEntryModifiedEventForSave(entry);
+    }
+
+    @Override
+    public void readFromFile() throws IOException {
+        Resource resource = new ClassPathResource("words.xlsx");
+        FileInputStream file = new FileInputStream(resource.getFile());
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        Map<Integer, List<String>> data = new HashMap<>();
+        int i = 0;
+        for (Row row : sheet) {
+            String word = row.getCell(0).getRichStringCellValue().getString();
+            if(!StringUtils.isEmpty(word)) {
+                String meaning = row.getCell(1).getRichStringCellValue().getString();
+                String type = row.getCell(2).getRichStringCellValue().getString();
+                SaveEntryServiceRequest newEntry = SaveEntryServiceRequest.builder()
+                        .word(word)
+                        .sourceLanguageCode("en")
+                        .type(type)
+                        .translations(new HashMap<>()).build();
+                newEntry.getTranslations().put("tr", meaning);
+                this.save(newEntry);
+            }
+            else {
+                break;
+            }
+        }
     }
 
     private void generateEntryModifiedEventForSave(Entry entry) {
