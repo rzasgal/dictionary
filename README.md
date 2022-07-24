@@ -19,6 +19,10 @@ To Deploy this project
   && mkdir -p /var/lib/minikube/data/zookeeper/log
   && mkdir -p /var/lib/minikube/data/mongodb
   
+  chmod -R 777 /var/lib/minikube/data
+  
+  minikube image load dictionary
+  
   kubectl apply -f ./minikube/elasticsearch/persistencevolumes.yml
   kubectl apply -f ./minikube/elasticsearch/elasticsearch.yml
   kubectl apply -f ./minikube/kafka/persistencevolumes.yml
@@ -31,6 +35,10 @@ To Deploy this project
   ./gradlew clean build
   
   docker build -t dictionary .
+  
+  minikube image load dictionary
+  
+  kubectl apply -f ./minikube/dictionary/dictionary.yml
 ```
 
 ## Tech Stack

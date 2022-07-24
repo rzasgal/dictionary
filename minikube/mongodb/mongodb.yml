@@ -28,7 +28,6 @@ spec:
       containers:
       - image: mongo:4.4.13
         name: mongodb
-        imagePullPolicy: Never
         env:
           # Use secret in prod use cases
         - name: MONGO_INITDB_ROOT_USERNAME

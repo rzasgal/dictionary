@@ -28,7 +28,6 @@ spec:
       containers:
       - image: kibana:7.16.3
         name: kibana
-        imagePullPolicy: Never
         env:
         - name: ELASTICSEARCH_HOSTS
           value: '["http://elasticsearch:9200"]'

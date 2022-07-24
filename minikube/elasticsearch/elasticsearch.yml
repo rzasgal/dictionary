@@ -36,7 +36,6 @@ spec:
       containers:
       - image: elasticsearch:7.16.3
         name: elasticsearch
-        imagePullPolicy: Never
         env:
         - name: 'discovery.type'
           value: 'single-node'
