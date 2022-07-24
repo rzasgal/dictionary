@@ -3,6 +3,7 @@ package com.usb.dictionary.entry.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.usb.dictionary.entry.event.EntryModified;
+import com.usb.dictionary.entry.file.request.ReadFromXlsxFileServiceRequest;
 import com.usb.dictionary.entry.model.Entry;
 import com.usb.dictionary.entry.model.EntryDto;
 import com.usb.dictionary.entry.model.Translation;
@@ -14,25 +15,16 @@ import com.usb.dictionary.entry.service.request.SearchEntry;
 import com.usb.dictionary.entry.service.response.SearchEntryResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
+import static com.usb.dictionary.entry.file.EntryFileReader.readFromXlsxFile;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -114,31 +106,34 @@ public class EntryServiceImpl implements EntryService {
     }
 
     @Override
-    public void readFromFile() throws IOException {
-        Resource resource = new ClassPathResource("words.xlsx");
-        FileInputStream file = new FileInputStream(resource.getFile());
-        Workbook workbook = new XSSFWorkbook(file);
-        Sheet sheet = workbook.getSheetAt(0);
-
-        Map<Integer, List<String>> data = new HashMap<>();
-        int i = 0;
-        for (Row row : sheet) {
-            String word = row.getCell(0).getRichStringCellValue().getString();
-            if(!StringUtils.isEmpty(word)) {
-                String meaning = row.getCell(1).getRichStringCellValue().getString();
-                String type = row.getCell(2).getRichStringCellValue().getString();
-                SaveEntryServiceRequest newEntry = SaveEntryServiceRequest.builder()
-                        .word(word)
-                        .sourceLanguageCode("en")
-                        .type(type)
-                        .translations(new HashMap<>()).build();
-                newEntry.getTranslations().put("tr", meaning);
-                this.save(newEntry);
-            }
-            else {
-                break;
-            }
+    public void saveCombination(SaveEntryServiceRequest saveEntryServiceRequest){
+        save(saveEntryServiceRequest);
+        Map<String, String> translations = new HashMap<>(saveEntryServiceRequest.getTranslations());
+        for (Map.Entry<String, String> sourceLanguageCodeMeaningPair : translations.entrySet()) {
+            SaveEntryServiceRequest newEntrySaveRequest = SaveEntryServiceRequest.builder().type(saveEntryServiceRequest.getType())
+                    .word(sourceLanguageCodeMeaningPair.getValue())
+                    .sourceLanguageCode(sourceLanguageCodeMeaningPair.getKey())
+                    .translations(new HashMap<>()).build();
+            newEntrySaveRequest.getTranslations().putAll(saveEntryServiceRequest.getTranslations());
+            newEntrySaveRequest.getTranslations().put(saveEntryServiceRequest.getSourceLanguageCode(), saveEntryServiceRequest.getWord());
+            newEntrySaveRequest.getTranslations().remove(sourceLanguageCodeMeaningPair.getKey());
+            save(newEntrySaveRequest);
         }
+    }
+
+    @Override
+    public void readFromFile( ) throws IOException {
+        readFromXlsxFile(ReadFromXlsxFileServiceRequest.builder().fileName("words.xlsx")
+                .sheetIndex(0)
+                .wordIndex(0)
+                .meaningIndex(1)
+                .typeIndex(2).build()).forEach(this::saveCombination);
+
+    }
+
+    @Override
+    public void readFromFile(ReadFromXlsxFileServiceRequest readFromXlsxFileServiceRequest) throws IOException {
+        readFromXlsxFile(readFromXlsxFileServiceRequest).forEach(this::saveCombination);
     }
 
     private void generateEntryModifiedEventForSave(Entry entry) {

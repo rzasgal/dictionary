@@ -25,4 +25,16 @@ docker-compose.yml will be added.
 - Elasticsearch 7.16.3
 - Kafka 3.2.0
 
+## Sample Requests
+
+Sample Requests are in the "dictionary.har" file
+
+## Security
+
+Simple http basic security was implemented
+```bash
+username: user
+password: xynnQowM0K8stjfjltQq
+```
+
   

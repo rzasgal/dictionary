@@ -1,6 +1,10 @@
 spring:
   application:
     name: dictionary
+  security:
+    user:
+      name: user
+      password: xynnQowM0K8stjfjltQq
 server:
   servlet:
     context-path: /dictionary
