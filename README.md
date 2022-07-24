@@ -11,11 +11,27 @@ App for saving entries and searching among them.
 To Deploy this project
 
 ```bash
+  minikube start
+  
+  mkdir -p /var/lib/minikube/data/elasticsearch 
+  && mkdir -p /var/lib/minikube/data/kafka 
+  && mkdir -p /var/lib/minikube/data/zookeeper/data 
+  && mkdir -p /var/lib/minikube/data/zookeeper/log
+  && mkdir -p /var/lib/minikube/data/mongodb
+  
+  kubectl apply -f ./minikube/elasticsearch/persistencevolumes.yml
+  kubectl apply -f ./minikube/elasticsearch/elasticsearch.yml
+  kubectl apply -f ./minikube/kafka/persistencevolumes.yml
+  kubectl apply -f ./minikube/kafka/kafka.yml
+  kubectl apply -f ./minikube/mongodb/persistencevolumes.yml
+  kubectl apply -f ./minikube/mongodb/mongodb.yml
+  
+  minikube tunnel &
+  
   ./gradlew clean build
   
   docker build -t dictionary .
 ```
-docker-compose.yml will be added.
 
 ## Tech Stack
 
