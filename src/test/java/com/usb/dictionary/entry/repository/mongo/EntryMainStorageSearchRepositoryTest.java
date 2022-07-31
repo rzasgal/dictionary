@@ -1,7 +1,7 @@
 package com.usb.dictionary.entry.repository.mongo;
 
 import com.usb.dictionary.entry.model.Entry;
-import com.usb.dictionary.entry.repository.elasticsearch.EntryFullTextSearchRepository;
+import com.usb.dictionary.searchentry.repository.elasticsearch.SearchEntryFullTextSearchRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +25,7 @@ class EntryMainStorageSearchRepositoryTest {
     private static final String SOURCE_LANGUAGE = "en";
 
     @MockBean
-    private EntryFullTextSearchRepository entryFullTextSearchRepository;
+    private SearchEntryFullTextSearchRepository entryFullTextSearchRepository;
 
     @Autowired
     private EntryMainStorageRepository entryMainStorageRepository;

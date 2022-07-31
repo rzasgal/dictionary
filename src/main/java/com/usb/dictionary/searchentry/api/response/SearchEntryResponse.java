@@ -1,4 +1,4 @@
-package com.usb.dictionary.entry.api.controller.response;
+package com.usb.dictionary.searchentry.api.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +13,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EntryResponse implements Serializable {
+public class SearchEntryResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = 5281555246986984835L;
     private String word;

@@ -1,6 +1,6 @@
-package com.usb.dictionary.entry.repository.elasticsearch;
+package com.usb.dictionary.searchentry.repository.elasticsearch;
 
-import com.usb.dictionary.entry.model.Entry;
+import com.usb.dictionary.searchentry.model.SearchEntry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.annotations.Query;
@@ -10,10 +10,10 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface EntryFullTextSearchRepository extends ElasticsearchRepository<Entry, String> {
-    Optional<Entry> findByWord(String word);
+public interface SearchEntryFullTextSearchRepository extends ElasticsearchRepository<SearchEntry, String> {
+    Optional<SearchEntry> findByWord(String word);
 
-    Page<Entry> findByWordAndSourceLanguageCode(String word, String sourceLanguageCode, PageRequest pageRequest);
+    Page<SearchEntry> findByWordAndSourceLanguageCode(String word, String sourceLanguageCode, PageRequest pageRequest);
 
     @Query(value = "{\n" +
             "    \"bool\": {\n" +
@@ -35,5 +35,5 @@ public interface EntryFullTextSearchRepository extends ElasticsearchRepository<E
             "    } \n" +
             "\n" +
             "  }")
-    Page<Entry> findByWordAndSourceLanguageCodeWithFuzzy(String word, String sourceLanguageCode, PageRequest pageRequest);
+    Page<SearchEntry> findByWordAndSourceLanguageCodeWithFuzzy(String word, String sourceLanguageCode, PageRequest pageRequest);
 }

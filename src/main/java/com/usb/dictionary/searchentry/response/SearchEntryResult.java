@@ -1,6 +1,6 @@
-package com.usb.dictionary.entry.service.response;
+package com.usb.dictionary.searchentry.response;
 
-import com.usb.dictionary.entry.model.EntryDto;
+import com.usb.dictionary.searchentry.model.SearchEntryDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +17,6 @@ import java.util.List;
 public class SearchEntryResult implements Serializable {
     @Serial
     private static final long serialVersionUID = 8147769026956503542L;
-    private List<EntryDto> entries;
-    private List<EntryDto> entriesAlternatives;
+    private List<SearchEntryDto> entries;
+    private List<SearchEntryDto> entriesAlternatives;
 }

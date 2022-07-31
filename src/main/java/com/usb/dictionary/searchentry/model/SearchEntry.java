@@ -1,21 +1,20 @@
-package com.usb.dictionary.entry.model;
+package com.usb.dictionary.searchentry.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.elasticsearch.annotations.Document;
 
 import java.util.List;
 
-@Data
-@Document(collection = "word")
+@Document(indexName = "word")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Entry{
-
+@Data
+public class SearchEntry {
     @Id
     private String id;
     private String word;

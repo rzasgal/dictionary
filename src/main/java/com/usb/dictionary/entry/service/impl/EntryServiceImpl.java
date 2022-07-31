@@ -5,30 +5,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.usb.dictionary.entry.event.EntryModified;
 import com.usb.dictionary.entry.file.request.ReadFromXlsxFileServiceRequest;
 import com.usb.dictionary.entry.model.Entry;
-import com.usb.dictionary.entry.model.EntryDto;
 import com.usb.dictionary.entry.model.Translation;
-import com.usb.dictionary.entry.repository.elasticsearch.EntryFullTextSearchRepository;
 import com.usb.dictionary.entry.repository.mongo.EntryMainStorageRepository;
 import com.usb.dictionary.entry.service.EntryService;
 import com.usb.dictionary.entry.service.request.SaveEntryServiceRequest;
-import com.usb.dictionary.entry.service.request.SearchEntry;
-import com.usb.dictionary.entry.service.response.SearchEntryResult;
+import com.usb.dictionary.searchentry.repository.elasticsearch.SearchEntryFullTextSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import static com.usb.dictionary.entry.file.EntryFileReader.readFromXlsxFile;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Service
 @RequiredArgsConstructor
@@ -37,58 +31,13 @@ public class EntryServiceImpl implements EntryService {
 
     private final EntryMainStorageRepository entryMainStorageRepository;
 
-    private final EntryFullTextSearchRepository entryFullTextSearchRepository;
+    private final SearchEntryFullTextSearchRepository entryFullTextSearchRepository;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     private final ObjectMapper objectMapper;
 
-    private int pageSize = 10;
-
-    @Override
-    public SearchEntryResult search(SearchEntry searchEntry){
-        String word = searchEntry.getWord();
-        String sourceLanguageCode = searchEntry.getSourceLanguageCode();
-        PageRequest page = PageRequest.of(searchEntry.getPage(), pageSize);
-        Page<Entry> result = this.entryFullTextSearchRepository.findByWordAndSourceLanguageCode(word
-                , sourceLanguageCode
-                , page);
-        Page<Entry> resultAlternatives = null;
-        if(result.isEmpty()){
-            resultAlternatives = this.entryFullTextSearchRepository.findByWordAndSourceLanguageCodeWithFuzzy(word
-                    , sourceLanguageCode
-                    , page);
-        }
-        SearchEntryResult searchEntryResult = SearchEntryResult.builder()
-                .entries(mapEntries(result)).entriesAlternatives(mapEntries(resultAlternatives))
-                .build();
-        log.info("message=\"entry search result word:{}, sourceLanguageCode:{}, result:{}\"" +
-                ", feature=EntryServiceImpl, method=search"
-                , word
-                , sourceLanguageCode
-                , searchEntryResult);
-        return searchEntryResult;
-    }
-
-    private List<EntryDto> mapEntries(Page<Entry> entries){
-        if(entries==null || isEmpty(entries.getContent())){
-            return emptyList();
-        }
-        return mapEntries(entries.getContent());
-    }
-
-    private List<EntryDto> mapEntries(Collection<Entry> entries) {
-        return entries.stream()
-                .map(entry -> EntryDto.builder().word(entry.getWord())
-                        .sourceLanguageCode(entry.getSourceLanguageCode())
-                        .type(entry.getType())
-                        .translations(entry.getTranslations().stream()
-                                .collect(toMap(Translation::getTargetLanguageCode, Translation::getMeaning))).build())
-                .collect(toList());
-    }
-
-    @Override
-    public void save(SaveEntryServiceRequest saveEntryServiceRequest) {
+    private void save(SaveEntryServiceRequest saveEntryServiceRequest) {
         Optional<Entry> existingWord
                 = this.entryMainStorageRepository
                 .findByWordAndSourceLanguageCode(saveEntryServiceRequest.getWord()
@@ -171,30 +120,4 @@ public class EntryServiceImpl implements EntryService {
                 .add(Translation.builder().targetLanguageCode(targetLanguageCode).meaning(meaning).build()));
         return entry;
     }
-
-    @KafkaListener(topics = {EntryModified.TOPIC_NAME}, groupId = "dictionary")
-    private void saveEntryToFullTextSearchRepository(String stringEntryModified){
-        try {
-            EntryModified entryModified = this.objectMapper.readValue(stringEntryModified, EntryModified.class);
-            Optional<Entry> existingWordOptional = this.entryFullTextSearchRepository.findByWord(entryModified.getWord());
-            Entry entry = null;
-            if(existingWordOptional.isPresent()){
-                entry= existingWordOptional.get();
-                entry = updateExistingEntry(entry, entryModified.getTranslations());
-            }
-            else
-            {
-                entry = Entry.builder()
-                        .sourceLanguageCode(entryModified.getSourceLanguageCode())
-                        .type(entryModified.getType())
-                        .word(entryModified.getWord()).translations(new ArrayList<>()).build();
-                entry = updateEntry(entry, entryModified.getTranslations());
-            }
-            entry = this.entryFullTextSearchRepository.save(entry);
-            log.info("message=\"entry saved id:{}\", feature=EntryServiceImpl, method=saveEntryToElasticSearch", entry.getId());
-        } catch (JsonProcessingException e) {
-            log.error("message=\"an error occurred\", feature=EntryServiceImpl, method=entryModifiedEvent", e);
-        }
-    }
-
 }

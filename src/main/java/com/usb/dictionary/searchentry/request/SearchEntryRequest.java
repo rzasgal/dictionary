@@ -1,4 +1,4 @@
-package com.usb.dictionary.entry.service.request;
+package com.usb.dictionary.searchentry.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +11,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SearchEntry implements Serializable {
+public class SearchEntryRequest implements Serializable {
     private String word;
     private String sourceLanguageCode;
     private int page;

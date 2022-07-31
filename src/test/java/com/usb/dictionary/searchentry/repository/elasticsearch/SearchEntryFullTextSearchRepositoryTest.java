@@ -1,7 +1,7 @@
-package com.usb.dictionary.entry.repository.elasticsearch;
+package com.usb.dictionary.searchentry.repository.elasticsearch;
 
 import com.usb.dictionary.configuration.TestElasticSearchContainer;
-import com.usb.dictionary.entry.model.Entry;
+import com.usb.dictionary.searchentry.model.SearchEntry;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -31,10 +31,10 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 @ContextConfiguration(classes = {ElasticsearchRestClientAutoConfiguration.class
         , ElasticsearchDataAutoConfiguration.class})
 @Testcontainers
-class EntryFullTextSearchRepositoryTest {
+class SearchEntryFullTextSearchRepositoryTest {
 
     @Autowired
-    public EntryFullTextSearchRepository entryFullTextSearchRepository;
+    public SearchEntryFullTextSearchRepository searchEntryFullTextSearchRepository;
 
     @Container
     private static ElasticsearchContainer container = new TestElasticSearchContainer();
@@ -51,23 +51,23 @@ class EntryFullTextSearchRepositoryTest {
 
     @Test
     public void findByWord_success(){
-        this.entryFullTextSearchRepository.save(Entry.builder().word("test").build());
-        Optional<Entry> word = this.entryFullTextSearchRepository.findByWord("test");
+        this.searchEntryFullTextSearchRepository.save(SearchEntry.builder().word("test").build());
+        Optional<SearchEntry> word = this.searchEntryFullTextSearchRepository.findByWord("test");
         assertTrue(word.isPresent());
     }
 
     @Test
     public void findByWordAndSourceLanguageCode_success(){
-        this.entryFullTextSearchRepository.save(Entry.builder().word("test").sourceLanguageCode("en").build());
-        Page<Entry> word = this.entryFullTextSearchRepository.findByWordAndSourceLanguageCode("test"
+        this.searchEntryFullTextSearchRepository.save(SearchEntry.builder().word("test").sourceLanguageCode("en").build());
+        Page<SearchEntry> word = this.searchEntryFullTextSearchRepository.findByWordAndSourceLanguageCode("test"
                 , "en", PageRequest.of(0, 10));
         assertFalse(isEmpty(word.getContent()));
     }
 
     @Test
     public void findByWordAndSourceLanguageCodeWithFuzzy_success(){
-        this.entryFullTextSearchRepository.save(Entry.builder().word("tes").sourceLanguageCode("en").build());
-        Page<Entry> word = this.entryFullTextSearchRepository.findByWordAndSourceLanguageCodeWithFuzzy("test"
+        this.searchEntryFullTextSearchRepository.save(SearchEntry.builder().word("tes").sourceLanguageCode("en").build());
+        Page<SearchEntry> word = this.searchEntryFullTextSearchRepository.findByWordAndSourceLanguageCodeWithFuzzy("test"
                 , "en", PageRequest.of(0, 10));
         assertFalse(isEmpty(word.getContent()));
     }
