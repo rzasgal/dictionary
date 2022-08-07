@@ -23,7 +23,7 @@ public interface SearchEntryFullTextSearchRepository extends ElasticsearchReposi
             "        }\n" +
             "      },\n" +
             "      {\n" +
-            "        \"fuzzy\": {\n" +
+            "        \"match\": {\n" +
             "          \"word\": {\n" +
             "            \"value\": \"?0\"\n" +
             "            , \"fuzziness\": 2\n" +
