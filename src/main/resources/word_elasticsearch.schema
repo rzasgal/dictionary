@@ -41,7 +41,15 @@ PUT /word
  	      "type": "text"
  	    },
  	    "translations":{
- 	      "type": "nested"
+ 	      "type": "nested",
+ 	      "properties":{
+ 	        "targetLanguageCode":{
+ 	          "type":"keyword"
+ 	        },
+   	      "meaning":{
+   	        "type":"keyword"
+   	      }
+ 	      }
  	    }
  	  }
  	}
