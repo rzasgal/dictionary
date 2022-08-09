@@ -81,7 +81,7 @@ public class SearchEntryServiceImpl implements SearchEntryService {
     private void saveEntryToFullTextSearchRepository(String stringEntryModified){
         try {
             EntryModified entryModified = this.objectMapper.readValue(stringEntryModified, EntryModified.class);
-            Optional<SearchEntry> existingWordOptional = this.searchEntryFullTextSearchRepository.findByWord(entryModified.getWord());
+            Optional<SearchEntry> existingWordOptional = this.searchEntryFullTextSearchRepository.findById(entryModified.getId());
             SearchEntry entry = null;
             if(existingWordOptional.isPresent()){
                 entry= existingWordOptional.get();

@@ -17,6 +17,7 @@ public class EntryModified implements Serializable {
     public static final String TOPIC_NAME = "entry.modified";
     @Serial
     private static final long serialVersionUID = -7119920639022950266L;
+    private String id;
     private String word;
     private String type;
     private String sourceLanguageCode;

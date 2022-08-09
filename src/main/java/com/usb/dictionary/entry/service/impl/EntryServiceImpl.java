@@ -87,6 +87,7 @@ public class EntryServiceImpl implements EntryService {
 
     private void generateEntryModifiedEventForSave(Entry entry) {
         EntryModified entryModified = EntryModified.builder()
+                .id(entry.getId())
                 .sourceLanguageCode(entry.getSourceLanguageCode())
                 .word(entry.getWord())
                 .type(entry.getType())
