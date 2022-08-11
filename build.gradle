@@ -2,8 +2,8 @@ plugins {
 	id 'org.springframework.boot' version '2.6.5'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
+	id "com.palantir.docker" version "0.34.0"
 }
-
 group = 'com.usb.dictionary'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
@@ -50,4 +50,9 @@ bootJar {
 	layered{
 		enabled = true
 	}
+}
+
+docker{
+	name "${project.name}:${project.version}"
+	copySpec.from("build").into("build")
 }

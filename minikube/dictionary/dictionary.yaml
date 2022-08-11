@@ -26,7 +26,7 @@ spec:
         app: dictionary
     spec:
       containers:
-      - image: dictionary:latest
+      - image: dictionary:0.0.1-SNAPSHOT
         name: dictionary
         imagePullPolicy: Never
         env:

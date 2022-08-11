@@ -32,9 +32,7 @@ To Deploy this project
   
   minikube tunnel &
   
-  ./gradlew clean build
-  
-  docker build -t dictionary .
+  ./gradlew clean build docker
   
   minikube image load dictionary
   

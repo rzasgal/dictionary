@@ -50,7 +50,7 @@ public class SearchEntryServiceImpl implements SearchEntryService {
                     , page);
         }
         SearchEntryResult searchEntryResult = SearchEntryResult.builder()
-                .entries(mapEntries(result)).entriesAlternatives(mapEntries(resultAlternatives))
+                .entries(mapEntries(result)).entryAlternatives(mapEntries(resultAlternatives))
                 .build();
         log.info("message=\"entry search result word:{}, sourceLanguageCode:{}, result:{}\"" +
                         ", feature=EntryServiceImpl, method=search"
