@@ -61,3 +61,15 @@ docker{
 dockerComposeUp {
 	dependsOn 'docker'
 }
+
+task runApp(type:org.gradle.api.tasks.GradleBuild){
+	test.enabled = false
+	tasks=['clean', 'build', 'docker', 'dockerComposeUp']
+	doLast{
+		println 'Running...'
+	}
+}
+
+task stopApp(type:Exec){
+	commandLine 'docker-compose', 'down'
+}

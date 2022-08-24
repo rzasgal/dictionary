@@ -11,7 +11,12 @@ App for saving entries and searching among them.
 To Deploy this project
 
 ```bash
-  ./gradlew clean build docker dockerComposeUp
+  ./gradlew runApp
+```
+
+To Stop Application running
+```bash
+  ./gradlew stopApp
 ```
 
 ## Tech Stack
