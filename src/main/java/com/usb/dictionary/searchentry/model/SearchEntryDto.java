@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -18,4 +19,5 @@ public class SearchEntryDto implements Serializable {
     private String type;
     private String sourceLanguageCode;
     private Map<String, String> translations;
+    private Set<String> tags;
 }

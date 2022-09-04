@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 
@@ -38,8 +39,36 @@ public class SearchEntryServiceImpl implements SearchEntryService {
     @Override
     public SearchEntryResult search(SearchEntryRequest searchEntry){
         String word = searchEntry.getWord();
+        String tag = searchEntry.getTag();
         String sourceLanguageCode = searchEntry.getSourceLanguageCode();
         PageRequest page = PageRequest.of(searchEntry.getPage(), pageSize);
+        if(StringUtils.hasText(word)) {
+            return searchByWord(word, sourceLanguageCode, page);
+        }
+        else if(StringUtils.hasText(tag)){
+            return searchByTag(tag, sourceLanguageCode, page);
+        }
+        else{
+            return SearchEntryResult.builder().build();
+        }
+    }
+
+    private SearchEntryResult searchByTag(String tag, String sourceLanguageCode, PageRequest page) {
+        Page<SearchEntry> result = this.searchEntryFullTextSearchRepository.findByTagsAndSourceLanguageCode(tag
+                , sourceLanguageCode
+                , page);
+        SearchEntryResult searchEntryResult = SearchEntryResult.builder()
+                .entries(mapEntries(result))
+                .build();
+        log.info("message=\"entry search result tag:{}, sourceLanguageCode:{}, result:{}\"" +
+                        ", feature=EntryServiceImpl, method=searchByTag"
+                , tag
+                , sourceLanguageCode
+                , searchEntryResult);
+        return searchEntryResult;
+    }
+
+    private SearchEntryResult searchByWord(String word, String sourceLanguageCode, PageRequest page) {
         Page<SearchEntry> result = this.searchEntryFullTextSearchRepository.findByWordAndSourceLanguageCode(word
                 , sourceLanguageCode
                 , page);
@@ -53,7 +82,7 @@ public class SearchEntryServiceImpl implements SearchEntryService {
                 .entries(mapEntries(result)).entryAlternatives(mapEntries(resultAlternatives))
                 .build();
         log.info("message=\"entry search result word:{}, sourceLanguageCode:{}, result:{}\"" +
-                        ", feature=EntryServiceImpl, method=search"
+                        ", feature=EntryServiceImpl, method=searchByWord"
                 , word
                 , sourceLanguageCode
                 , searchEntryResult);
@@ -72,30 +101,31 @@ public class SearchEntryServiceImpl implements SearchEntryService {
                 .map(entry -> SearchEntryDto.builder().word(entry.getWord())
                         .sourceLanguageCode(entry.getSourceLanguageCode())
                         .type(entry.getType())
+                        .tags(entry.getTags())
                         .translations(entry.getTranslations().stream()
                                 .collect(toMap(Translation::getTargetLanguageCode, Translation::getMeaning))).build())
                 .collect(toList());
     }
 
-    @KafkaListener(topics = {EntryModified.TOPIC_NAME}, groupId = "dictionary")
+    @KafkaListener(topics = {EntryModified.TOPIC_NAME}, groupId = "dictionary.searchentry")
     private void saveEntryToFullTextSearchRepository(String stringEntryModified){
         try {
             EntryModified entryModified = this.objectMapper.readValue(stringEntryModified, EntryModified.class);
             Optional<SearchEntry> existingWordOptional = this.searchEntryFullTextSearchRepository.findById(entryModified.getId());
             SearchEntry entry = null;
             if(existingWordOptional.isPresent()){
-                entry= existingWordOptional.get();
-                entry.getTranslations().clear();
-                entry.setTranslations(toMapTranslations(entryModified.getTranslations()));
+                entry = existingWordOptional.get();
             }
             else
             {
-                entry = SearchEntry.builder()
-                        .sourceLanguageCode(entryModified.getSourceLanguageCode())
-                        .type(entryModified.getType())
-                        .word(entryModified.getWord()).translations(new ArrayList<>()).build();
-                entry.setTranslations(toMapTranslations(entryModified.getTranslations()));
+                entry = SearchEntry.builder().translations(new ArrayList<>()).build();
             }
+            entry.setWord(entryModified.getWord());
+            entry.setType(entryModified.getType());
+            entry.setSourceLanguageCode(entryModified.getSourceLanguageCode());
+            entry.setTags(entryModified.getTags());
+            entry.getTranslations().clear();
+            entry.setTranslations(toMapTranslations(entryModified.getTranslations()));
             entry = this.searchEntryFullTextSearchRepository.save(entry);
             log.info("message=\"entry saved id:{}\", feature=EntryServiceImpl, method=saveEntryToElasticSearch", entry.getId());
         } catch (JsonProcessingException e) {

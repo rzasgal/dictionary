@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Document(collection = "word")
@@ -22,4 +23,5 @@ public class Entry{
     private String type;
     private String sourceLanguageCode;
     private List<Translation> translations;
+    private Set<String> tags;
 }

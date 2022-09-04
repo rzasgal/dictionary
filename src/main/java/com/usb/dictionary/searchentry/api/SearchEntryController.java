@@ -21,12 +21,14 @@ public class SearchEntryController {
 
     @GetMapping("/search")
     public ResponseEntity<SearchEntryGroupResponse> searchEntry(
-            @RequestParam("word") String word
+            @RequestParam(value = "tag", required = false) String tag
+            , @RequestParam(value = "word", required = false) String word
             , @RequestParam("sourceLanguageCode") String sourceLanguageCode
             , @RequestParam("page")int page){
 
         return ResponseEntity.ok(this.searchEntryControllerMapper
                 .toSearchEntryResponse(this.searchEntryService.search(SearchEntryRequest.builder()
+                        .tag(tag)
                         .word(word)
                         .sourceLanguageCode(sourceLanguageCode)
                         .page(page).build())));

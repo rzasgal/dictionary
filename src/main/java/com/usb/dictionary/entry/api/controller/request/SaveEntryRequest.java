@@ -6,6 +6,7 @@ import lombok.Data;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @Builder
@@ -16,4 +17,5 @@ public class SaveEntryRequest implements Serializable {
     private String type;
     private String sourceLanguageCode;
     private Map<String, String> translations;
+    private Set<String> tags;
 }

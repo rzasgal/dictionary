@@ -44,7 +44,8 @@ public class EntryServiceImpl implements EntryService {
                         , saveEntryServiceRequest.getSourceLanguageCode());
         Entry entry = null;
         if(existingWord.isPresent()){
-            entry = updateExistingEntry(existingWord.get(), saveEntryServiceRequest.getTranslations());
+            entry = updateEntryTranslations(existingWord.get(), saveEntryServiceRequest.getTranslations());
+            entry.setTags(saveEntryServiceRequest.getTags());
         }
         else {
            entry = createNewEntry(saveEntryServiceRequest);
@@ -57,16 +58,19 @@ public class EntryServiceImpl implements EntryService {
     @Override
     public void saveCombination(SaveEntryServiceRequest saveEntryServiceRequest){
         save(saveEntryServiceRequest);
-        Map<String, String> translations = new HashMap<>(saveEntryServiceRequest.getTranslations());
-        for (Map.Entry<String, String> sourceLanguageCodeMeaningPair : translations.entrySet()) {
-            SaveEntryServiceRequest newEntrySaveRequest = SaveEntryServiceRequest.builder().type(saveEntryServiceRequest.getType())
-                    .word(sourceLanguageCodeMeaningPair.getValue())
-                    .sourceLanguageCode(sourceLanguageCodeMeaningPair.getKey())
-                    .translations(new HashMap<>()).build();
-            newEntrySaveRequest.getTranslations().putAll(saveEntryServiceRequest.getTranslations());
-            newEntrySaveRequest.getTranslations().put(saveEntryServiceRequest.getSourceLanguageCode(), saveEntryServiceRequest.getWord());
-            newEntrySaveRequest.getTranslations().remove(sourceLanguageCodeMeaningPair.getKey());
-            save(newEntrySaveRequest);
+        if(saveEntryServiceRequest.getCreateCombinations() != null && saveEntryServiceRequest.getCreateCombinations()) {
+            Map<String, String> translations = new HashMap<>(saveEntryServiceRequest.getTranslations());
+            for (Map.Entry<String, String> sourceLanguageCodeMeaningPair : translations.entrySet()) {
+                SaveEntryServiceRequest newEntrySaveRequest = SaveEntryServiceRequest.builder().type(saveEntryServiceRequest.getType())
+                        .word(sourceLanguageCodeMeaningPair.getValue())
+                        .sourceLanguageCode(sourceLanguageCodeMeaningPair.getKey())
+                        .tags(saveEntryServiceRequest.getTags())
+                        .translations(new HashMap<>()).build();
+                newEntrySaveRequest.getTranslations().putAll(saveEntryServiceRequest.getTranslations());
+                newEntrySaveRequest.getTranslations().put(saveEntryServiceRequest.getSourceLanguageCode(), saveEntryServiceRequest.getWord());
+                newEntrySaveRequest.getTranslations().remove(sourceLanguageCodeMeaningPair.getKey());
+                save(newEntrySaveRequest);
+            }
         }
     }
 
@@ -91,6 +95,7 @@ public class EntryServiceImpl implements EntryService {
                 .sourceLanguageCode(entry.getSourceLanguageCode())
                 .word(entry.getWord())
                 .type(entry.getType())
+                .tags(entry.getTags())
                 .translations(entry.getTranslations().stream()
                         .collect(toMap(Translation::getTargetLanguageCode
                                 , Translation::getMeaning))).build();
@@ -101,24 +106,23 @@ public class EntryServiceImpl implements EntryService {
         }
     }
 
-    private Entry updateExistingEntry(Entry entry, Map<String, String> translations) {
-        entry.getTranslations().clear();
-        entry = updateEntry(entry, translations);
-        return entry;
-    }
-
     private Entry createNewEntry(SaveEntryServiceRequest saveEntryServiceRequest) {
         Entry newEntry = Entry.builder()
                 .sourceLanguageCode(saveEntryServiceRequest.getSourceLanguageCode())
                 .type(saveEntryServiceRequest.getType())
+                .tags(saveEntryServiceRequest.getTags())
                 .word(saveEntryServiceRequest.getWord()).translations(new ArrayList<>()).build();
-        newEntry = updateEntry(newEntry, saveEntryServiceRequest.getTranslations());
+        newEntry = updateEntryTranslations(newEntry, saveEntryServiceRequest.getTranslations());
         return newEntry;
     }
 
-    private Entry updateEntry(Entry entry, Map<String, String> translations) {
-        translations.forEach((targetLanguageCode, meaning)->entry.getTranslations()
-                .add(Translation.builder().targetLanguageCode(targetLanguageCode).meaning(meaning).build()));
+    private Entry updateEntryTranslations(Entry entry, Map<String, String> translations) {
+        entry.getTranslations().clear();
+        translations.forEach((targetLanguageCode, meaning)->
+            entry.getTranslations().add(Translation.builder()
+                    .targetLanguageCode(targetLanguageCode)
+                    .meaning(meaning)
+                    .build()));
         return entry;
     }
 }

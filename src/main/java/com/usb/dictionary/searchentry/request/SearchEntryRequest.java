@@ -12,6 +12,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Builder
 public class SearchEntryRequest implements Serializable {
+    private String tag;
     private String word;
     private String sourceLanguageCode;
     private int page;

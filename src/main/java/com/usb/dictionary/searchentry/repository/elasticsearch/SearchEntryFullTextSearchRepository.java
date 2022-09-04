@@ -15,6 +15,8 @@ public interface SearchEntryFullTextSearchRepository extends ElasticsearchReposi
 
     Page<SearchEntry> findByWordAndSourceLanguageCode(String word, String sourceLanguageCode, PageRequest pageRequest);
 
+    Page<SearchEntry> findByTagsAndSourceLanguageCode(String tag, String sourceLanguageCode, PageRequest pageRequest);
+
     @Query(value = "{\n" +
             "    \"bool\": {\n" +
             "      \"must\": [{\n" +
