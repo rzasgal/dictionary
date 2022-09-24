@@ -5,7 +5,9 @@ import com.usb.dictionary.entry.event.EntryModified;
 import com.usb.dictionary.tag.model.Tag;
 import com.usb.dictionary.tag.repository.mongo.TagRepository;
 import com.usb.dictionary.tag.service.TagService;
+import com.usb.dictionary.tag.service.mapper.TagServiceMapper;
 import com.usb.dictionary.tag.service.request.SaveTagServiceRequest;
+import com.usb.dictionary.tag.service.response.GetAllTagsServiceResponse;
 import com.usb.dictionary.tag.service.response.SaveTagServiceResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,8 @@ public class TagServiceImpl implements TagService {
     private final TagRepository tagRepository;
     private final ObjectMapper objectMapper;
 
+    private final TagServiceMapper tagServiceMapper;
+
     @Override
     public SaveTagServiceResponse save(SaveTagServiceRequest saveTagServiceRequest){
         Optional<Tag> tagByNameOptional = this.tagRepository.findByName(saveTagServiceRequest.getName());
@@ -38,6 +42,14 @@ public class TagServiceImpl implements TagService {
         }
         return SaveTagServiceResponse.builder().uuid(tag.getUuid()).build();
     }
+
+    @Override
+    public GetAllTagsServiceResponse getAllTags(){
+        return GetAllTagsServiceResponse.builder()
+                .tags(this.tagServiceMapper.toTagDto(this.tagRepository.findAll())).build();
+    }
+
+
     @KafkaListener(topics = {EntryModified.TOPIC_NAME}, groupId = "dictionary.tag")
     private void saveTagsToFullTextSearchRepository(String stringEntryModified) {
         try {

@@ -16,6 +16,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -96,13 +97,15 @@ public class EntryServiceImpl implements EntryService {
                 .word(entry.getWord())
                 .type(entry.getType())
                 .tags(entry.getTags())
+                .version(entry.getVersion())
+                .timestamp(LocalDateTime.now())
                 .translations(entry.getTranslations().stream()
                         .collect(toMap(Translation::getTargetLanguageCode
                                 , Translation::getMeaning))).build();
         try {
             this.kafkaTemplate.send(EntryModified.TOPIC_NAME, this.objectMapper.writeValueAsString(entryModified));
         } catch (JsonProcessingException e) {
-
+            log.error("message=\"exception occurred\"", e);
         }
     }
 

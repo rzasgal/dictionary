@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,4 +25,6 @@ public class EntryModified implements Serializable {
     private String sourceLanguageCode;
     private Map<String, String> translations;
     private Set<String> tags;
+    private String version;
+    private LocalDateTime timestamp;
 }
