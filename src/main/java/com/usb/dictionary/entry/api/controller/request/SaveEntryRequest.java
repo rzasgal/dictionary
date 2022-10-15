@@ -18,4 +18,5 @@ public class SaveEntryRequest implements Serializable {
     private String sourceLanguageCode;
     private Map<String, String> translations;
     private Set<String> tags;
+    private Boolean createCombinations;
 }

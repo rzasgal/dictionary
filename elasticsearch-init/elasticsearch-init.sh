@@ -1,3 +1,6 @@
+#!/bin/bash
+echo "test asad"
+curl -X DELETE "localhost:9200/word?pretty"
 curl -X PUT "localhost:9200/word?pretty" -H 'Content-Type: application/json' -d'
 {
   "settings":{
@@ -58,11 +61,3 @@ curl -X PUT "localhost:9200/word?pretty" -H 'Content-Type: application/json' -d'
   }
 }
 '
-
-curl -X GET "localhost:9200/word?pretty"
-
-curl -X GET "localhost:9200/_cat/indices?bytes=b&s=store.size:desc,index:asc&v=true&pretty"
-
-curl -X DELETE "localhost:9200/word?pretty"
-
-curl -X GET "localhost:9200/word/_mapping?pretty"

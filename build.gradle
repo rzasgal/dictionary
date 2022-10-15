@@ -64,12 +64,18 @@ dockerComposeUp {
 
 task runApp(type:org.gradle.api.tasks.GradleBuild){
 	test.enabled = false
-	tasks=['clean', 'build', 'docker', 'dockerComposeUp']
+	dependsOn('build', 'docker', 'dockerComposeUp', 'initElasticSearch')
+	tasks=['build', 'docker', 'dockerComposeUp', 'initElasticSearch']
 	doLast{
 		println 'Running...'
 	}
 }
 
+task initElasticSearch(type:Exec){
+	commandLine './elasticsearch-init/elasticsearch-init.sh'
+	mustRunAfter dockerComposeUp
+}
+
 task stopApp(type:Exec){
-	commandLine 'docker-compose', 'down'
+	commandLine 'docker-compose', 'down', '-v'
 }
