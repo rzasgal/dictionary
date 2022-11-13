@@ -8,15 +8,15 @@ App for saving entries and searching among them.
 
 ## Deploy
 
-To Deploy this project
+To Build & Deploy this project on local docker-compose stack
 
 ```bash
-  ./gradlew runApp
+  ./gradlew start
 ```
 
-To Stop Application running
+To Stop Application running on local docker-compose stack 
 ```bash
-  ./gradlew stopApp
+  ./gradlew stop
 ```
 
 ## Tech Stack

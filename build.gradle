@@ -58,17 +58,11 @@ docker{
 	copySpec.from("build").into("build")
 }
 
-dockerComposeUp {
-	dependsOn 'docker'
-}
+tasks.getByName('docker') dependsOn tasks.getByName('build')
+tasks.getByName('dockerComposeUp') dependsOn tasks.getByName('docker')
 
-task runApp(type:org.gradle.api.tasks.GradleBuild){
-	test.enabled = false
-	dependsOn('build', 'docker', 'dockerComposeUp', 'initElasticSearch')
-	tasks=['build', 'docker', 'dockerComposeUp', 'initElasticSearch']
-	doLast{
-		println 'Running...'
-	}
+task start(){
+	dependsOn tasks.getByName('dockerComposeUp')
 }
 
 task initElasticSearch(type:Exec){
@@ -76,6 +70,6 @@ task initElasticSearch(type:Exec){
 	mustRunAfter dockerComposeUp
 }
 
-task stopApp(type:Exec){
+task stop(type:Exec){
 	commandLine 'docker-compose', 'down', '-v'
 }
