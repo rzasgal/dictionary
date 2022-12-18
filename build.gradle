@@ -29,9 +29,6 @@ dependencies {
 	implementation 'org.apache.poi:poi:5.2.0'
 	implementation 'org.apache.poi:poi-ooxml:5.2.0'
 	implementation 'org.springdoc:springdoc-openapi-ui:1.6.9'
-	//implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
-	//implementation group: 'io.springfox', name: 'springfox-swagger2', version: '3.0.0'
-	//implementation group: 'io.springfox', name: 'springfox-swagger-ui', version: '3.0.0'
 	compileOnly 'org.projectlombok:lombok'
 	compileOnly 'org.mapstruct:mapstruct:1.4.2.Final'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -62,14 +59,16 @@ docker{
 tasks.getByName('docker') dependsOn tasks.getByName('build')
 tasks.getByName('dockerComposeUp') dependsOn tasks.getByName('docker')
 
-task start(){
-	dependsOn tasks.getByName('dockerComposeUp')
-}
-
 task initElasticSearch(type:Exec){
 	commandLine './elasticsearch-init/elasticsearch-init.sh'
 	mustRunAfter dockerComposeUp
 }
+
+task start(){
+	dependsOn tasks.getByName('initElasticSearch'), tasks.getByName('dockerComposeUp')
+}
+
+
 
 task stop(type:Exec){
 	commandLine 'docker-compose', 'down', '-v'
