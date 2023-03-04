@@ -1,4 +1,5 @@
-package com.usb.dictionary.searchentry.model;
+package com.usb.dictionary.entry.api.controller.request;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,15 +8,13 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class SearchEntryDto implements Serializable {
-    private String id;
-    private List<SearchWordDto> words;
+public class EntryRequestDto implements Serializable {
+    private List<WordRequestDto> words;
     private Set<String> tags;
 }

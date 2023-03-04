@@ -13,5 +13,4 @@ public class SearchEntryGroupResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = 3737118657025004308L;
     private List<SearchEntryResponse> entries;
-    private List<SearchEntryResponse> entryAlternatives;
 }

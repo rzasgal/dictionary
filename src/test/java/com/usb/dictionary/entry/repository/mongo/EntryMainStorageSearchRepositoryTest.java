@@ -1,6 +1,8 @@
 package com.usb.dictionary.entry.repository.mongo;
 
 import com.usb.dictionary.entry.model.Entry;
+import com.usb.dictionary.entry.model.Word;
+import com.usb.dictionary.entry.repository.mongodb.EntryMainStorageRepository;
 import com.usb.dictionary.searchentry.repository.elasticsearch.SearchEntryFullTextSearchRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 
+import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestPropertySource(properties = {"spring.mongodb.embedded.version = 3.6.5"})
@@ -35,9 +38,12 @@ class EntryMainStorageSearchRepositoryTest {
 
     @Test
     public void findByWordAndSourceLanguageCode_success(){
-        this.entryMainStorageRepository.save(Entry.builder().word(SEARCH_WORD).sourceLanguageCode(SOURCE_LANGUAGE).build());
+        Entry savedEntry = this.entryMainStorageRepository.save(Entry.builder().words(asList(Word.builder()
+                .name(SEARCH_WORD)
+                .languageCode(SOURCE_LANGUAGE)
+                .build())).build());
         Optional<Entry> byWordAndSourceLanguageCode = this.entryMainStorageRepository
-                .findByWordAndSourceLanguageCode(SEARCH_WORD, SOURCE_LANGUAGE);
+                .findById(savedEntry.getId());
         assertTrue(byWordAndSourceLanguageCode.isPresent());
     }
 

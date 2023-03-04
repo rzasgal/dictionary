@@ -11,31 +11,55 @@ import java.util.Optional;
 
 @Repository
 public interface SearchEntryFullTextSearchRepository extends ElasticsearchRepository<SearchEntry, String> {
-    Optional<SearchEntry> findByWord(String word);
-
-    Page<SearchEntry> findByWordAndSourceLanguageCode(String word, String sourceLanguageCode, PageRequest pageRequest);
-
-    Page<SearchEntry> findByTagsAndSourceLanguageCode(String tag, String sourceLanguageCode, PageRequest pageRequest);
 
     @Query(value = "{\n" +
-            "    \"bool\": {\n" +
-            "      \"must\": [{\n" +
-            "          \"match\": {\n" +
-            "            \"sourceLanguageCode\": \"?1\"\n" +
-            "        }\n" +
-            "      },\n" +
-            "      {\n" +
-            "        \"match\": {\n" +
-            "          \"word\": {\n" +
-            "            \"query\": \"?0\"\n" +
-            "            , \"fuzziness\": 2\n" +
-            "          }\n" +
+            "    \"nested\": {\n" +
+            "      \"path\": \"words\",\n" +
+            "      \"query\": {\n" +
+            "        \"bool\": {\n" +
+            "          \"must\": [\n" +
+            "            {\n" +
+            "              \"match\": {\n" +
+            "                \"words.name\": \"?0\"\n" +
+            "              }\n" +
+            "            },\n" +
+            "            {\n" +
+            "              \"match\": {\n" +
+            "                \"words.languageCode\": \"?1\"\n" +
+            "              }\n" +
+            "            }\n" +
+            "          ]\n" +
             "        }\n" +
             "      }\n" +
-            "      ]\n" +
-            "      \n" +
-            "    } \n" +
-            "\n" +
-            "  }")
-    Page<SearchEntry> findByWordAndSourceLanguageCodeWithFuzzy(String word, String sourceLanguageCode, PageRequest pageRequest);
+            "    }\n" +
+            "}")
+    Page<SearchEntry> findByWordsAndLanguageCode(String word, String languageCode, PageRequest pageRequest);
+
+    @Query(value = "{\n" +
+            "  \"nested\": {\n" +
+            "    \"path\": \"words\",\n" +
+            "    \"query\": {\n" +
+            "      \"bool\": {\n" +
+            "        \"must\": [\n" +
+            "          {\n" +
+            "            \"match\": {\n" +
+            "              \"words.name\": {\n" +
+            "                \"query\": \"?0\",\n" +
+            "                \"fuzziness\": 2\n" +
+            "              }\n" +
+            "            }\n" +
+            "          },\n" +
+            "          {\n" +
+            "            \"match\": {\n" +
+            "              \"words.languageCode\": \"?1\"\n" +
+            "            }\n" +
+            "          }\n" +
+            "        ]\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}")
+    Page<SearchEntry> findByWordsAndLanguageCodeWithFuzzy(String word, String languageCode, PageRequest pageRequest);
+
+    Page<SearchEntry> findByTags(String tag, PageRequest pageRequest);
 }

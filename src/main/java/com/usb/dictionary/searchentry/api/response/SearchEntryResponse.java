@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,9 +18,6 @@ import java.util.Set;
 public class SearchEntryResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = 5281555246986984835L;
-    private String word;
-    private String type;
-    private String sourceLanguageCode;
-    private Map<String, String> translations;
+    private List<SearchWordResponse> words;
     private Set<String> tags;
 }

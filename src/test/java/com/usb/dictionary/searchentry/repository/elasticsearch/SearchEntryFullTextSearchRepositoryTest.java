@@ -2,6 +2,7 @@ package com.usb.dictionary.searchentry.repository.elasticsearch;
 
 import com.usb.dictionary.configuration.TestElasticSearchContainer;
 import com.usb.dictionary.searchentry.model.SearchEntry;
+import com.usb.dictionary.searchentry.model.SearchWord;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Optional;
 
+import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.util.CollectionUtils.isEmpty;
@@ -49,25 +51,25 @@ class SearchEntryFullTextSearchRepositoryTest {
         container.stop();
     }
 
-    @Test
-    public void findByWord_success(){
-        this.searchEntryFullTextSearchRepository.save(SearchEntry.builder().word("test").build());
-        Optional<SearchEntry> word = this.searchEntryFullTextSearchRepository.findByWord("test");
-        assertTrue(word.isPresent());
-    }
 
     @Test
-    public void findByWordAndSourceLanguageCode_success(){
-        this.searchEntryFullTextSearchRepository.save(SearchEntry.builder().word("test").sourceLanguageCode("en").build());
-        Page<SearchEntry> word = this.searchEntryFullTextSearchRepository.findByWordAndSourceLanguageCode("test"
+    public void findByWordsAndLanguageCode_success(){
+        this.searchEntryFullTextSearchRepository.save(SearchEntry.builder().words(asList(SearchWord.builder()
+                .name("test")
+                .languageCode("en")
+                .build())).build());
+        Page<SearchEntry> word = this.searchEntryFullTextSearchRepository.findByWordsAndLanguageCode("test"
                 , "en", PageRequest.of(0, 10));
         assertFalse(isEmpty(word.getContent()));
     }
 
     @Test
     public void findByWordAndSourceLanguageCodeWithFuzzy_success(){
-        this.searchEntryFullTextSearchRepository.save(SearchEntry.builder().word("tes").sourceLanguageCode("en").build());
-        Page<SearchEntry> word = this.searchEntryFullTextSearchRepository.findByWordAndSourceLanguageCodeWithFuzzy("test"
+        this.searchEntryFullTextSearchRepository.save(SearchEntry.builder().words(asList(SearchWord.builder()
+                .name("test")
+                .languageCode("en")
+                .build())).build());
+        Page<SearchEntry> word = this.searchEntryFullTextSearchRepository.findByWordsAndLanguageCodeWithFuzzy("test"
                 , "en", PageRequest.of(0, 10));
         assertFalse(isEmpty(word.getContent()));
     }

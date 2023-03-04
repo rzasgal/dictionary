@@ -10,7 +10,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import java.util.List;
 import java.util.Set;
 
-@Document(indexName = "word")
+@Document(indexName = "entry")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,9 +18,6 @@ import java.util.Set;
 public class SearchEntry {
     @Id
     private String id;
-    private String word;
-    private String type;
-    private String sourceLanguageCode;
-    private List<Translation> translations;
+    private List<SearchWord> words;
     private Set<String> tags;
 }

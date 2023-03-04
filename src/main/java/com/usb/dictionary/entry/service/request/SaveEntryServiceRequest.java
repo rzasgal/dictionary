@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,10 +18,5 @@ import java.util.Set;
 public class SaveEntryServiceRequest implements Serializable {
     @Serial
     private static final long serialVersionUID = -8863568559514178586L;
-    private String word;
-    private String type;
-    private String sourceLanguageCode;
-    private Map<String, String> translations;
-    private Set<String> tags;
-    private Boolean createCombinations;
+    EntryServiceRequestDto entry;
 }

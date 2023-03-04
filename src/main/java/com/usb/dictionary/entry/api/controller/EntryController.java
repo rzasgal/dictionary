@@ -22,7 +22,7 @@ public class EntryController {
 
     @PostMapping
     public ResponseEntity save(@RequestBody SaveEntryRequest saveEntryRequest){
-        this.entryService.saveCombination(this.entryControllerMapper.toSaveEntryServiceRequest(saveEntryRequest));
+        this.entryService.saveEntry(this.entryControllerMapper.toSaveEntryServiceRequest(saveEntryRequest));
         return ResponseEntity.created( ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand("").toUri()).build();
     }

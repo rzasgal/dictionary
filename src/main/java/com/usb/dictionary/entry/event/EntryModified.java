@@ -1,5 +1,6 @@
 package com.usb.dictionary.entry.event;
 
+import com.usb.dictionary.entry.model.WordDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -20,10 +21,7 @@ public class EntryModified implements Serializable {
     @Serial
     private static final long serialVersionUID = -7119920639022950266L;
     private String id;
-    private String word;
-    private String type;
-    private String sourceLanguageCode;
-    private Map<String, String> translations;
+    private List<WordDto> words;
     private Set<String> tags;
     private String version;
     private LocalDateTime timestamp;

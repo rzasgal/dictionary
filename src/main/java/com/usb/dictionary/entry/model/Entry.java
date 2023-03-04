@@ -12,18 +12,16 @@ import java.util.List;
 import java.util.Set;
 
 @Data
-@Document(collection = "word")
+@Document("entry")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Entry{
+public class Entry {
 
     @Id
     private String id;
-    private String word;
+    private List<Word> words;
     private String type;
-    private String sourceLanguageCode;
-    private List<Translation> translations;
     private Set<String> tags;
     @Version
     private String version;

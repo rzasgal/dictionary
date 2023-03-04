@@ -1,7 +1,9 @@
 package com.usb.dictionary.entry.file;
 
 import com.usb.dictionary.entry.file.request.ReadFromXlsxFileServiceRequest;
+import com.usb.dictionary.entry.service.request.EntryServiceRequestDto;
 import com.usb.dictionary.entry.service.request.SaveEntryServiceRequest;
+import com.usb.dictionary.entry.service.request.WordServiceRequestDto;
 import com.usb.dictionary.exception.BusinessException;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -18,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.usb.dictionary.entry.file.ErrorCodes.FILE_NAME_OR_FILLECAN_NOT_BE_NULL_AT_THE_SAMETIME;
+import static java.util.Arrays.asList;
 
 public class EntryFileReader {
 
@@ -45,11 +48,19 @@ public class EntryFileReader {
                         ? defaultTargetLanguageCode
                         : readFromXlsxRow(row, readFromXlsxFileServiceRequest.getTargetLanguageIndex());
                 SaveEntryServiceRequest newEntry = SaveEntryServiceRequest.builder()
-                        .word(word)
-                        .sourceLanguageCode(sourceLanguageCode)
-                        .type(type)
-                        .translations(new HashMap<>()).build();
-                newEntry.getTranslations().put(targetLanguageCode, meaning);
+                        .entry(EntryServiceRequestDto.builder()
+                                .words(asList(WordServiceRequestDto.builder()
+                                        .name(word)
+                                        .languageCode(sourceLanguageCode)
+                                        .type(type)
+                                        .build(),
+                                        WordServiceRequestDto.builder()
+                                                .name(meaning)
+                                                .languageCode(targetLanguageCode)
+                                                .type(type)
+                                                .build()))
+                                .build())
+                        .build();
                 saveEntryServiceRequestList.add(newEntry);
             }
             else {

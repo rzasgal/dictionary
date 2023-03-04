@@ -10,3 +10,10 @@ spring:
       database: dictionary
   elasticsearch:
     uris: http://elasticsearch:9200
+
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          elasticsearch: debug
