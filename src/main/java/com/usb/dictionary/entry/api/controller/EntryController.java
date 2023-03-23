@@ -15,6 +15,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/entry")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
 public class EntryController {
 
     private final EntryService entryService;

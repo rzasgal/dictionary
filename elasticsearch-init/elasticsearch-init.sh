@@ -31,7 +31,7 @@ curl -X PUT "localhost:9200/entry?pretty" -H 'Content-Type: application/json' -d
         "type": "nested",
         "properties": {
           "name": {
-            "type": "keyword"
+            "type": "text"
           },
           "nameExt": {
             "type": "text",
