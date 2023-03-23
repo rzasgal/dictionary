@@ -37,9 +37,6 @@ curl -X PUT "localhost:9200/entry?pretty" -H 'Content-Type: application/json' -d
             "type": "text",
             "analyzer": "ngram_analyzer"
           },
-          "type": {
-            "type": "keyword"
-          },
           "languageCode": {
             "type": "keyword"
           },
@@ -48,6 +45,9 @@ curl -X PUT "localhost:9200/entry?pretty" -H 'Content-Type: application/json' -d
           }
         }
       },
+      "type": {
+         "type": "keyword"
+       },
       "tags": {
         "type": "keyword"
       }

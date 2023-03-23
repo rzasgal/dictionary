@@ -49,15 +49,14 @@ public class EntryFileReader {
                         : readFromXlsxRow(row, readFromXlsxFileServiceRequest.getTargetLanguageIndex());
                 SaveEntryServiceRequest newEntry = SaveEntryServiceRequest.builder()
                         .entry(EntryServiceRequestDto.builder()
+                                .type(type)
                                 .words(asList(WordServiceRequestDto.builder()
                                         .name(word)
                                         .languageCode(sourceLanguageCode)
-                                        .type(type)
                                         .build(),
                                         WordServiceRequestDto.builder()
                                                 .name(meaning)
                                                 .languageCode(targetLanguageCode)
-                                                .type(type)
                                                 .build()))
                                 .build())
                         .build();

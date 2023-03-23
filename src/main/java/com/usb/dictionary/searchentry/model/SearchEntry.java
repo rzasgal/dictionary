@@ -20,4 +20,5 @@ public class SearchEntry {
     private String id;
     private List<SearchWord> words;
     private Set<String> tags;
+    private String type;
 }

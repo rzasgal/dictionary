@@ -55,6 +55,7 @@ public class EntryServiceImpl implements EntryService {
     private void generateEntryModifiedEventForSave(Entry entry) {
         EntryModified entryModified = EntryModified.builder()
                 .id(entry.getId())
+                .type(entry.getType())
                 .tags(entry.getTags())
                 .words(entry.getWords().stream().map(this.entryServiceMapper::toWordDto).toList())
                 .build();
@@ -69,6 +70,7 @@ public class EntryServiceImpl implements EntryService {
         EntryServiceRequestDto entry = saveEntryServiceRequest.getEntry();
         return Entry.builder()
                 .tags(entry.getTags())
+                .type(entry.getType())
                 .words(entry.getWords().stream().map(this.entryServiceMapper::toWord).toList())
                 .build();
     }

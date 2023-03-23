@@ -13,5 +13,4 @@ public class WordServiceRequestDto {
     private String name;
     private String languageCode;
     private String description;
-    private String type;
 }

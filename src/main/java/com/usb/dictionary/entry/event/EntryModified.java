@@ -23,6 +23,7 @@ public class EntryModified implements Serializable {
     private String id;
     private List<WordDto> words;
     private Set<String> tags;
+    private String type;
     private String version;
     private LocalDateTime timestamp;
 }

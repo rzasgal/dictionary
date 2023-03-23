@@ -16,5 +16,4 @@ public class SearchWord implements Serializable {
     private String nameExt;
     private String languageCode;
     private String description;
-    private String type;
 }

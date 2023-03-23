@@ -15,5 +15,6 @@ import java.util.Set;
 @Builder
 public class EntryServiceRequestDto implements Serializable {
     private List<WordServiceRequestDto> words;
+    private String type;
     private Set<String> tags;
 }

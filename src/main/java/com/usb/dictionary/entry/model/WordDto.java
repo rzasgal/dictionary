@@ -15,5 +15,4 @@ public class WordDto implements Serializable {
     private String name;
     private String languageCode;
     private String description;
-    private String type;
 }

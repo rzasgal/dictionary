@@ -17,5 +17,6 @@ import java.util.Set;
 public class SearchEntryDto implements Serializable {
     private String id;
     private List<SearchWordDto> words;
+    private String type;
     private Set<String> tags;
 }
