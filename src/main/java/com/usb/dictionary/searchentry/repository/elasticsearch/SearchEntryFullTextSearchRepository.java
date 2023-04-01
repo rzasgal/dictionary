@@ -62,4 +62,23 @@ public interface SearchEntryFullTextSearchRepository extends ElasticsearchReposi
     Page<SearchEntry> findByWordsAndLanguageCodeWithFuzzy(String word, String languageCode, PageRequest pageRequest);
 
     Page<SearchEntry> findByTags(String tag, PageRequest pageRequest);
+
+    @Query(value = "{\n" +
+            "    \"function_score\": {\n" +
+            "      \"query\": {\n" +
+            "        \"nested\": {\n" +
+            "          \"path\": \"words\",\n" +
+            "          \"query\": {\n" +
+            "            \"term\": {\n" +
+            "              \"words.languageCode\": {\n" +
+            "                \"value\": \"?0\"\n" +
+            "              }\n" +
+            "            }\n" +
+            "          }\n" +
+            "        }\n" +
+            "      },\n" +
+            "      \"random_score\": {}\n" +
+            "    }\n" +
+            "  }")
+    Page<SearchEntry> findRandom(String languageCode, PageRequest pageRequest);
 }

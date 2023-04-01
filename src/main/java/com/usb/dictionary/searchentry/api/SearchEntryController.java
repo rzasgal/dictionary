@@ -21,14 +21,22 @@ public class SearchEntryController {
     public ResponseEntity<SearchEntryGroupResponse> searchEntry(
             @RequestParam(value = "tag", required = false) String tag
             , @RequestParam(value = "word", required = false) String word
-            , @RequestParam("sourceLanguageCode") String sourceLanguageCode
+            , @RequestParam("languageCode") String languageCode
             , @RequestParam("page")int page){
 
         return ResponseEntity.ok(this.searchEntryControllerMapper
                 .toSearchEntryResponse(this.searchEntryService.search(SearchEntryRequest.builder()
                         .tag(tag)
                         .word(word)
-                        .sourceLanguageCode(sourceLanguageCode)
+                        .sourceLanguageCode(languageCode)
                         .page(page).build())));
+    }
+
+    @GetMapping("/search/random")
+    public ResponseEntity<SearchEntryGroupResponse> searchEntryRandom(
+            @RequestParam("languageCode") String languageCode
+            , @RequestParam("page")int page){
+        return ResponseEntity.ok(this.searchEntryControllerMapper
+                .toSearchEntryResponse(this.searchEntryService.searchRandom(languageCode, page)));
     }
 }

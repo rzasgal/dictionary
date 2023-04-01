@@ -47,6 +47,19 @@ public class SearchEntryServiceImpl implements SearchEntryService {
         }
     }
 
+    @Override
+    public SearchEntryResult searchRandom(String languageCode, int page){
+        Page<SearchEntry> result = this.searchEntryFullTextSearchRepository.findRandom(languageCode, PageRequest.of(page, pageSize));
+        SearchEntryResult searchEntryResult = SearchEntryResult.builder()
+                .entries(result.get().map(this.searchEntryServiceMapper::toSearchEntryDto).toList())
+                .build();
+        log.info("message=\"entry search result languageCode:{}, result:{}\"" +
+                        ", feature=EntryServiceImpl, method=searchRandom"
+                , languageCode
+                , searchEntryResult);
+        return searchEntryResult;
+    }
+
     private SearchEntryResult searchByTag(String tag, PageRequest page) {
         Page<SearchEntry> result = this.searchEntryFullTextSearchRepository.findByTags(tag, page);
         SearchEntryResult searchEntryResult = SearchEntryResult.builder()
@@ -79,6 +92,8 @@ public class SearchEntryServiceImpl implements SearchEntryService {
                 , searchEntryResult);
         return searchEntryResult;
     }
+
+
 
     @KafkaListener(topics = {EntryModified.TOPIC_NAME}, groupId = "dictionary.searchentry")
     private void saveEntryToFullTextSearchRepository(String stringEntryModified){
