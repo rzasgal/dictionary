@@ -10,11 +10,11 @@ import com.usb.dictionary.entry.service.EntryService;
 import com.usb.dictionary.entry.service.mapper.EntryServiceMapper;
 import com.usb.dictionary.entry.service.request.EntryServiceRequestDto;
 import com.usb.dictionary.entry.service.request.SaveEntryServiceRequest;
-import com.usb.dictionary.searchentry.repository.elasticsearch.SearchEntryFullTextSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 
@@ -31,8 +31,12 @@ public class EntryServiceImpl implements EntryService {
     private final ObjectMapper objectMapper;
 
     public void saveEntry(SaveEntryServiceRequest saveEntryServiceRequest) {
-        Entry entry = createNewEntry(saveEntryServiceRequest);
-        entry = this.entryMainStorageRepository.save(entry);
+        var entry = createNewEntry(saveEntryServiceRequest);
+        if(StringUtils.hasText(entry.getId())){
+            this.entryMainStorageRepository.findById(entry.getId()).ifPresent(existingEntry ->{
+                entry.setVersion(existingEntry.getVersion());
+            });
+        }
         generateEntryModifiedEventForSave(entry);
         log.info("message=\"entry saved id:{}\", feature=EntryServiceImpl, method=save", entry.getId());
     }
@@ -69,6 +73,7 @@ public class EntryServiceImpl implements EntryService {
     private Entry createNewEntry(SaveEntryServiceRequest saveEntryServiceRequest) {
         EntryServiceRequestDto entry = saveEntryServiceRequest.getEntry();
         return Entry.builder()
+                .id(saveEntryServiceRequest.getEntry().getId())
                 .tags(entry.getTags())
                 .type(entry.getType())
                 .words(entry.getWords().stream().map(this.entryServiceMapper::toWord).toList())

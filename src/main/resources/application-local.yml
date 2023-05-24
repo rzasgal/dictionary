@@ -1,15 +1,15 @@
 spring:
   kafka:
-    bootstrap-servers: kafka:9091
+    bootstrap-servers: localhost:9092
   data:
     mongodb:
-      host: mongodb
+      host: localhost
       port: 27017
       username: dictuser
       password: test
       database: dictionary
   elasticsearch:
-    uris: http://elasticsearch:9200
+    uris: http://localhost:9200
 
 logging:
   level:
