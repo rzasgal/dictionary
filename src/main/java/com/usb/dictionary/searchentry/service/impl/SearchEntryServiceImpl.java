@@ -99,11 +99,24 @@ public class SearchEntryServiceImpl implements SearchEntryService {
     private void saveEntryToFullTextSearchRepository(String stringEntryModified){
         try {
             EntryModified entryModified = this.objectMapper.readValue(stringEntryModified, EntryModified.class);
-            SearchEntry entry = this.searchEntryServiceMapper.toSearchEntry(entryModified);
-            entry = this.searchEntryFullTextSearchRepository.save(entry);
-            log.info("message=\"entry saved id:{}\", feature=EntryServiceImpl, method=saveEntryToElasticSearch", entry.getId());
+            if(entryModified.isDeleted()){
+                processDeleteEvent(entryModified);
+            }else{
+                processSaveEvent(entryModified);
+            }
         } catch (JsonProcessingException e) {
             log.error("message=\"an error occurred\", feature=EntryServiceImpl, method=entryModifiedEvent", e);
         }
+    }
+
+    private void processDeleteEvent(EntryModified entryModified) {
+        this.searchEntryFullTextSearchRepository.deleteById(entryModified.getId());
+        log.info("message=\"search entry deleted id:{}\", feature=EntryServiceImpl, method=saveEntryToElasticSearch", entryModified.getId());
+    }
+
+    private void processSaveEvent(EntryModified entryModified) {
+        SearchEntry entry = this.searchEntryServiceMapper.toSearchEntry(entryModified);
+        entry = this.searchEntryFullTextSearchRepository.save(entry);
+        log.info("message=\"search entry saved id:{}\", feature=EntryServiceImpl, method=saveEntryToElasticSearch", entry.getId());
     }
 }

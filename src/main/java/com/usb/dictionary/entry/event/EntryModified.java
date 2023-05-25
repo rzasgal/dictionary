@@ -26,4 +26,5 @@ public class EntryModified implements Serializable {
     private String type;
     private String version;
     private LocalDateTime timestamp;
+    private boolean deleted = false;
 }

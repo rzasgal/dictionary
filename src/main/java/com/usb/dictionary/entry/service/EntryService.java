@@ -7,7 +7,9 @@ import java.io.IOException;
 
 public interface EntryService {
 
-    void saveEntry(SaveEntryServiceRequest saveEntryServiceRequest);
+    void save(SaveEntryServiceRequest saveEntryServiceRequest);
+
+    void delete(String id);
 
     void readFromFile() throws IOException;
 

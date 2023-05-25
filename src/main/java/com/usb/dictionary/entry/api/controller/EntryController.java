@@ -23,9 +23,15 @@ public class EntryController {
 
     @PostMapping
     public ResponseEntity save(@RequestBody SaveEntryRequest saveEntryRequest){
-        this.entryService.saveEntry(this.entryControllerMapper.toSaveEntryServiceRequest(saveEntryRequest));
+        this.entryService.save(this.entryControllerMapper.toSaveEntryServiceRequest(saveEntryRequest));
         return ResponseEntity.created( ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand("").toUri()).build();
+    }
+
+    @DeleteMapping(path = "/{id}")
+    public ResponseEntity delete(@PathVariable("id") String id){
+        this.entryService.delete(id);
+        return ResponseEntity.ok().build();
     }
 
 

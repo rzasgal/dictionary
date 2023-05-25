@@ -30,15 +30,22 @@ public class EntryServiceImpl implements EntryService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    public void saveEntry(SaveEntryServiceRequest saveEntryServiceRequest) {
+    public void save(SaveEntryServiceRequest saveEntryServiceRequest) {
         var entry = createNewEntry(saveEntryServiceRequest);
         if(StringUtils.hasText(entry.getId())){
             this.entryMainStorageRepository.findById(entry.getId()).ifPresent(existingEntry ->{
                 entry.setVersion(existingEntry.getVersion());
             });
         }
-        generateEntryModifiedEventForSave(entry);
+        fireSaveEvent(entry);
         log.info("message=\"entry saved id:{}\", feature=EntryServiceImpl, method=save", entry.getId());
+    }
+
+    @Override
+    public void delete(String id){
+        this.entryMainStorageRepository.deleteById(id);
+        this.fireDeleteEvent(id);
+        log.info("message=\"entry deleted id:{}\", feature=EntryServiceImpl, method=save", id);
     }
 
     @Override
@@ -48,23 +55,33 @@ public class EntryServiceImpl implements EntryService {
                 .wordIndex(0)
                 .meaningIndex(1)
                 .typeIndex(2).build())
-                .forEach(this::saveEntry);
+                .forEach(this::save);
     }
 
     @Override
     public void readFromFile(ReadFromXlsxFileServiceRequest readFromXlsxFileServiceRequest) throws IOException {
-        readFromXlsxFile(readFromXlsxFileServiceRequest).forEach(this::saveEntry);
+        readFromXlsxFile(readFromXlsxFileServiceRequest).forEach(this::save);
     }
 
-    private void generateEntryModifiedEventForSave(Entry entry) {
-        EntryModified entryModified = EntryModified.builder()
+    private void fireSaveEvent(Entry entry) {
+        EntryModified entrySaved = EntryModified.builder()
                 .id(entry.getId())
                 .type(entry.getType())
                 .tags(entry.getTags())
                 .words(entry.getWords().stream().map(this.entryServiceMapper::toWordDto).toList())
                 .build();
         try {
-            this.kafkaTemplate.send(EntryModified.TOPIC_NAME, this.objectMapper.writeValueAsString(entryModified));
+            this.kafkaTemplate.send(EntryModified.TOPIC_NAME, this.objectMapper.writeValueAsString(entrySaved));
+        } catch (JsonProcessingException e) {
+            log.error("message=\"exception occurred\"", e);
+        }
+    }
+
+    private void fireDeleteEvent(String id) {
+        EntryModified entryDeleted = EntryModified.builder()
+                .id(id).deleted(true).build();
+        try {
+            this.kafkaTemplate.send(EntryModified.TOPIC_NAME, this.objectMapper.writeValueAsString(entryDeleted));
         } catch (JsonProcessingException e) {
             log.error("message=\"exception occurred\"", e);
         }
