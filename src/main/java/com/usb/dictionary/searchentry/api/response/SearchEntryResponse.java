@@ -18,6 +18,7 @@ import java.util.Set;
 public class SearchEntryResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = 5281555246986984835L;
+    private String id;
     private List<SearchWordResponse> words;
     private String type;
     private Set<String> tags;
