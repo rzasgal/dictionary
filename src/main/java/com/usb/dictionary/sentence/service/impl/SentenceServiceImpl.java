@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.elasticsearch.common.Strings.hasText;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -29,17 +31,17 @@ public class SentenceServiceImpl implements SentenceService {
 
     @Override
     public SaveSentenceServiceResponse save(SaveSentenceServiceRequest saveSentenceServiceRequest){
-        Optional<Sentence> optionalSentence = this.sentenceMainStorageRepository
-                .findByContent(saveSentenceServiceRequest.getSentence());
-        Sentence sentence = null;
-        if(optionalSentence.isPresent()){
-            sentence = optionalSentence.get();
-        }
-        else{
-            sentence = Sentence.builder()
-                    .content(saveSentenceServiceRequest.getSentence()).build();
+        Sentence sentence = Sentence.builder()
+                .content(saveSentenceServiceRequest.getSentence()).build();
+        if(hasText(saveSentenceServiceRequest.getId())){
+            Optional<Sentence> optionalSentence = this.sentenceMainStorageRepository
+                    .findById(saveSentenceServiceRequest.getId());
+            if(optionalSentence.isPresent()){
+                sentence.setVersion(optionalSentence.get().getVersion());
+            }
         }
         sentence.setTags(saveSentenceServiceRequest.getTags());
+        sentence.setEntryIds(saveSentenceServiceRequest.getEntryIds());
         sentence = this.sentenceMainStorageRepository.save(sentence);
         log.info("message=\"sentence:'{}', saved:{}\", method=save, feature=SentenceServiceImpl"
                 , saveSentenceServiceRequest.getSentence(), sentence.getId());

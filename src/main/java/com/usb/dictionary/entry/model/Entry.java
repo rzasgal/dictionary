@@ -20,9 +20,9 @@ public class Entry {
 
     @Id
     private String id;
-    private List<Word> words;
-    private String type;
+    private Set<Word> words;
     private Set<String> tags;
+    private String type;
     @Version
     private String version;
 }

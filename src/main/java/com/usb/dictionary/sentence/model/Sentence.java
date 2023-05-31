@@ -21,6 +21,7 @@ public class Sentence {
     private String id;
     private String content;
     private Set<String> tags;
+    private Set<String> entryIds;
     @Version
     private String version;
 }

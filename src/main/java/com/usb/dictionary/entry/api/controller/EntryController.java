@@ -2,8 +2,10 @@ package com.usb.dictionary.entry.api.controller;
 
 import com.usb.dictionary.entry.api.controller.mapper.EntryControllerMapper;
 import com.usb.dictionary.entry.api.controller.request.SaveEntryRequest;
+import com.usb.dictionary.entry.api.controller.response.GetEntryResponse;
 import com.usb.dictionary.entry.file.request.ReadFromXlsxFileServiceRequest;
 import com.usb.dictionary.entry.service.EntryService;
+import com.usb.dictionary.entry.service.response.GetEntryServiceResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/entry")
@@ -26,6 +29,17 @@ public class EntryController {
         this.entryService.save(this.entryControllerMapper.toSaveEntryServiceRequest(saveEntryRequest));
         return ResponseEntity.created( ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand("").toUri()).build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<GetEntryResponse> get(@PathVariable("id")String id){
+        Optional<GetEntryServiceResponse> getEntryServiceResponse = this.entryService.get(id);
+        if(getEntryServiceResponse.isPresent()){
+            return ResponseEntity.ok(this.entryControllerMapper.toGetEntryResponse(getEntryServiceResponse.get()));
+        }
+        else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping(path = "/{id}")

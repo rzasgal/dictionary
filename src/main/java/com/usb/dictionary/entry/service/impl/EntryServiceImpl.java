@@ -10,6 +10,7 @@ import com.usb.dictionary.entry.service.EntryService;
 import com.usb.dictionary.entry.service.mapper.EntryServiceMapper;
 import com.usb.dictionary.entry.service.request.EntryServiceRequestDto;
 import com.usb.dictionary.entry.service.request.SaveEntryServiceRequest;
+import com.usb.dictionary.entry.service.response.GetEntryServiceResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.usb.dictionary.entry.file.EntryFileReader.readFromXlsxFile;
 
@@ -30,13 +33,22 @@ public class EntryServiceImpl implements EntryService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
+    @Override
+    public Optional<GetEntryServiceResponse> get(String id) {
+        Optional<Entry> byId = this.entryMainStorageRepository.findById(id);
+        log.info("message=\"get entry id:{}\", feature=EntryServiceImpl, method=get", id);
+        return byId.map(this.entryServiceMapper::toGetEntryServiceResponse);
+    }
+
     public void save(SaveEntryServiceRequest saveEntryServiceRequest) {
         var entry = createNewEntry(saveEntryServiceRequest);
         if(StringUtils.hasText(entry.getId())){
-            this.entryMainStorageRepository.findById(entry.getId()).ifPresent(existingEntry ->{
-                entry.setVersion(existingEntry.getVersion());
-            });
+            Optional<Entry> existingEntry = this.entryMainStorageRepository.findById(entry.getId());
+            if(existingEntry.isPresent()) {
+                entry.setVersion(existingEntry.get().getVersion());
+            }
         }
+        entry = this.entryMainStorageRepository.save(entry);
         fireSaveEvent(entry);
         log.info("message=\"entry saved id:{}\", feature=EntryServiceImpl, method=save", entry.getId());
     }
@@ -93,7 +105,7 @@ public class EntryServiceImpl implements EntryService {
                 .id(saveEntryServiceRequest.getEntry().getId())
                 .tags(entry.getTags())
                 .type(entry.getType())
-                .words(entry.getWords().stream().map(this.entryServiceMapper::toWord).toList())
+                .words(entry.getWords().stream().map(this.entryServiceMapper::toWord).collect(Collectors.toSet()))
                 .build();
     }
 }

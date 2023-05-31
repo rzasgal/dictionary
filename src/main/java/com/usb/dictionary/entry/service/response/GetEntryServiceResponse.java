@@ -1,21 +1,21 @@
-package com.usb.dictionary.entry.model;
+package com.usb.dictionary.entry.service.response;
 
+
+import com.usb.dictionary.entry.model.WordDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-import java.util.Map;
 import java.util.Set;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class EntryDto implements Serializable {
+@AllArgsConstructor
+@NoArgsConstructor
+public class GetEntryServiceResponse {
     private String id;
-    private Set<String> words;
+    private Set<WordDto> words;
     private Set<String> tags;
     private String type;
 }
