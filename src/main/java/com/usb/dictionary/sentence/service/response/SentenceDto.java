@@ -1,7 +1,6 @@
-package com.usb.dictionary.sentence.api.request;
+package com.usb.dictionary.sentence.service.response;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,12 +9,12 @@ import java.io.Serializable;
 import java.util.Set;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SaveSentenceRequest implements Serializable {
+
+public class SentenceDto implements Serializable {
     @Serial
-    private static final long serialVersionUID = 4504918765701954888L;
+    private static final long serialVersionUID = 1017422773375496663L;
     private String id;
     private String content;
     private Set<String> tags;

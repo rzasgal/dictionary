@@ -6,15 +6,20 @@ import com.usb.dictionary.sentence.event.SentenceModified;
 import com.usb.dictionary.sentence.model.Sentence;
 import com.usb.dictionary.sentence.repository.mongo.SentenceMainStorageRepository;
 import com.usb.dictionary.sentence.service.SentenceService;
+import com.usb.dictionary.sentence.service.mapper.SentenceServiceMapper;
 import com.usb.dictionary.sentence.service.request.SaveSentenceServiceRequest;
+import com.usb.dictionary.sentence.service.response.GetSentencesServiceResponse;
 import com.usb.dictionary.sentence.service.response.SaveSentenceServiceResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.elasticsearch.common.Strings.hasText;
 
@@ -23,16 +28,29 @@ import static org.elasticsearch.common.Strings.hasText;
 @RequiredArgsConstructor
 public class SentenceServiceImpl implements SentenceService {
 
+    private static final int pageSize = 10;
     private final KafkaTemplate<String, String> kafkaTemplate;
-
     private final ObjectMapper objectMapper;
     private final SentenceMainStorageRepository sentenceMainStorageRepository;
+    private final SentenceServiceMapper sentenceServiceMapper;
+
+    @Override
+    public GetSentencesServiceResponse getByEntry(String entryId, int page) {
+        Page<Sentence> sentences = this.sentenceMainStorageRepository.findByEntryIds(Set.of(entryId), PageRequest.of(page, pageSize));
+        return  GetSentencesServiceResponse.builder()
+                .sentences(sentences.get().map(this.sentenceServiceMapper::toSentenceDto).toList())
+                .build();
+    }
 
 
     @Override
     public SaveSentenceServiceResponse save(SaveSentenceServiceRequest saveSentenceServiceRequest){
         Sentence sentence = Sentence.builder()
-                .content(saveSentenceServiceRequest.getSentence()).build();
+                .id(saveSentenceServiceRequest.getId())
+                .content(saveSentenceServiceRequest.getContent())
+                .tags(saveSentenceServiceRequest.getTags())
+                .entryIds(saveSentenceServiceRequest.getEntryIds())
+                .build();
         if(hasText(saveSentenceServiceRequest.getId())){
             Optional<Sentence> optionalSentence = this.sentenceMainStorageRepository
                     .findById(saveSentenceServiceRequest.getId());
@@ -40,11 +58,9 @@ public class SentenceServiceImpl implements SentenceService {
                 sentence.setVersion(optionalSentence.get().getVersion());
             }
         }
-        sentence.setTags(saveSentenceServiceRequest.getTags());
-        sentence.setEntryIds(saveSentenceServiceRequest.getEntryIds());
         sentence = this.sentenceMainStorageRepository.save(sentence);
         log.info("message=\"sentence:'{}', saved:{}\", method=save, feature=SentenceServiceImpl"
-                , saveSentenceServiceRequest.getSentence(), sentence.getId());
+                , saveSentenceServiceRequest.getContent(), sentence.getId());
         generateSentenceModifiedEvent(sentence);
         return SaveSentenceServiceResponse.builder()
                 .id(sentence.getId())

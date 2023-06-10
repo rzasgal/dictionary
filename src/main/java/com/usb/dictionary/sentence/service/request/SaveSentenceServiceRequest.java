@@ -17,7 +17,7 @@ public class SaveSentenceServiceRequest implements Serializable {
     @Serial
     private static final long serialVersionUID = -4765459970105690645L;
     private String id;
-    private String sentence;
+    private String content;
     private Set<String> tags;
     private Set<String> entryIds;
 }
