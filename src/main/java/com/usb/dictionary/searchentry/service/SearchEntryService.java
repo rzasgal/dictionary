@@ -4,7 +4,7 @@ import com.usb.dictionary.searchentry.request.SearchEntryRequest;
 import com.usb.dictionary.searchentry.response.SearchEntryResult;
 
 public interface SearchEntryService {
-    SearchEntryResult search(SearchEntryRequest searchEntry);
+  SearchEntryResult search(SearchEntryRequest searchEntry);
 
-    SearchEntryResult searchRandom(String languageCode, int page);
+  SearchEntryResult searchRandom(String languageCode, int page);
 }

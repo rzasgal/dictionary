@@ -8,14 +8,18 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @Configuration
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests().antMatchers("/hello/**").permitAll();
-        http.authorizeRequests().anyRequest().authenticated()
-                .and().httpBasic()
-                .and().csrf()
-                .disable()
-                .cors();
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-    }
+  @Override
+  protected void configure(HttpSecurity http) throws Exception {
+    http.authorizeRequests().antMatchers("/hello/**").permitAll();
+    http.authorizeRequests()
+        .anyRequest()
+        .authenticated()
+        .and()
+        .httpBasic()
+        .and()
+        .csrf()
+        .disable()
+        .cors();
+    http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+  }
 }

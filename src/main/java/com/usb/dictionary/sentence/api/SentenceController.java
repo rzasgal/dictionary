@@ -15,19 +15,21 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
 public class SentenceController {
 
-    private final SentenceService sentenceService;
-    private final SentenceControllerMapper sentenceControllerMapper;
+  private final SentenceService sentenceService;
+  private final SentenceControllerMapper sentenceControllerMapper;
 
-    @PostMapping
-    public SaveSentenceResponse save(@RequestBody SaveSentenceRequest saveSentenceRequest){
-        return this.sentenceControllerMapper.toSaveSentenceResponse(
-                this.sentenceService.save(
-                        this.sentenceControllerMapper.toSaveSentenceServiceRequest(saveSentenceRequest)));
-    }
+  @PostMapping
+  public SaveSentenceResponse save(@RequestBody SaveSentenceRequest saveSentenceRequest) {
+    return this.sentenceControllerMapper.toSaveSentenceResponse(
+        this.sentenceService.save(
+            this.sentenceControllerMapper.toSaveSentenceServiceRequest(saveSentenceRequest)));
+  }
 
-    @GetMapping("/byEntryId/{entryId}/{page}")
-    public ResponseEntity<GetSentencesResponse> getByEnryId(@PathVariable("entryId") String entryId, @PathVariable("page") int page){
-       return ResponseEntity.ok(this.sentenceControllerMapper.toGetSentencesResponse(this
-               .sentenceService.getByEntry(entryId, page)));
-    }
+  @GetMapping("/byEntryId/{entryId}/{page}")
+  public ResponseEntity<GetSentencesResponse> getByEnryId(
+      @PathVariable("entryId") String entryId, @PathVariable("page") int page) {
+    return ResponseEntity.ok(
+        this.sentenceControllerMapper.toGetSentencesResponse(
+            this.sentenceService.getByEntry(entryId, page)));
+  }
 }

@@ -13,14 +13,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/tag")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000", maxAge = 3600, exposedHeaders = {"Access-Control-Allow-Origin"})
+@CrossOrigin(
+    origins = "http://localhost:3000",
+    maxAge = 3600,
+    exposedHeaders = {"Access-Control-Allow-Origin"})
 public class TagController {
 
-    private final TagService tagService;
-    private final TagControllerMapper tagControllerMapper;
+  private final TagService tagService;
+  private final TagControllerMapper tagControllerMapper;
 
-    @GetMapping("/all")
-    public ResponseEntity<GetAllTagsResponse> getAllTags(){
-        return ResponseEntity.ok(this.tagControllerMapper.toGetAllTagsResponse(this.tagService.getAllTags()));
-    }
+  @GetMapping("/all")
+  public ResponseEntity<GetAllTagsResponse> getAllTags() {
+    return ResponseEntity.ok(
+        this.tagControllerMapper.toGetAllTagsResponse(this.tagService.getAllTags()));
+  }
 }

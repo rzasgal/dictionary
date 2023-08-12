@@ -8,7 +8,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface EntryControllerMapper {
-    SaveEntryServiceRequest toSaveEntryServiceRequest(SaveEntryRequest saveEntryRequest);
+  SaveEntryServiceRequest toSaveEntryServiceRequest(SaveEntryRequest saveEntryRequest);
 
-    GetEntryResponse toGetEntryResponse(GetEntryServiceResponse getEntryServiceResponse);
+  GetEntryResponse toGetEntryResponse(GetEntryServiceResponse getEntryServiceResponse);
 }

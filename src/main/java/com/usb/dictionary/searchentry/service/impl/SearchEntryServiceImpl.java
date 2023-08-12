@@ -22,101 +22,113 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class SearchEntryServiceImpl implements SearchEntryService {
 
-    private final SearchEntryServiceMapper searchEntryServiceMapper;
+  private final SearchEntryServiceMapper searchEntryServiceMapper;
 
-    private final ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
 
-    private final SearchEntryFullTextSearchRepository searchEntryFullTextSearchRepository;
+  private final SearchEntryFullTextSearchRepository searchEntryFullTextSearchRepository;
 
-    private int pageSize = 10;
+  private int pageSize = 10;
 
-    @Override
-    public SearchEntryResult search(SearchEntryRequest searchEntry){
-        String word = searchEntry.getWord();
-        String tag = searchEntry.getTag();
-        String languageCode = searchEntry.getSourceLanguageCode();
-        PageRequest page = PageRequest.of(searchEntry.getPage(), pageSize);
-        if(StringUtils.hasText(word)) {
-            return searchByWord(word, languageCode, page);
-        }
-        else if(StringUtils.hasText(tag)){
-            return searchByTag(tag, page);
-        }
-        else{
-            return SearchEntryResult.builder().build();
-        }
+  @Override
+  public SearchEntryResult search(SearchEntryRequest searchEntry) {
+    String word = searchEntry.getWord();
+    String tag = searchEntry.getTag();
+    String languageCode = searchEntry.getSourceLanguageCode();
+    PageRequest page = PageRequest.of(searchEntry.getPage(), pageSize);
+    if (StringUtils.hasText(word)) {
+      return searchByWord(word, languageCode, page);
+    } else if (StringUtils.hasText(tag)) {
+      return searchByTag(tag, page);
+    } else {
+      return SearchEntryResult.builder().build();
     }
+  }
 
-    @Override
-    public SearchEntryResult searchRandom(String languageCode, int page){
-        Page<SearchEntry> result = this.searchEntryFullTextSearchRepository.findRandom(languageCode, PageRequest.of(page, pageSize));
-        SearchEntryResult searchEntryResult = SearchEntryResult.builder()
-                .entries(result.get().map(this.searchEntryServiceMapper::toSearchEntryDto).toList())
-                .build();
-        log.info("message=\"entry search result languageCode:{}, result:{}\"" +
-                        ", feature=EntryServiceImpl, method=searchRandom"
-                , languageCode
-                , searchEntryResult);
-        return searchEntryResult;
+  @Override
+  public SearchEntryResult searchRandom(String languageCode, int page) {
+    Page<SearchEntry> result =
+        this.searchEntryFullTextSearchRepository.findRandom(
+            languageCode, PageRequest.of(page, pageSize));
+    SearchEntryResult searchEntryResult =
+        SearchEntryResult.builder()
+            .entries(result.get().map(this.searchEntryServiceMapper::toSearchEntryDto).toList())
+            .build();
+    log.info(
+        "message=\"entry search result languageCode:{}, result:{}\""
+            + ", feature=EntryServiceImpl, method=searchRandom",
+        languageCode,
+        searchEntryResult);
+    return searchEntryResult;
+  }
+
+  private SearchEntryResult searchByTag(String tag, PageRequest page) {
+    Page<SearchEntry> result = this.searchEntryFullTextSearchRepository.findByTags(tag, page);
+    SearchEntryResult searchEntryResult =
+        SearchEntryResult.builder()
+            .entries(result.get().map(this.searchEntryServiceMapper::toSearchEntryDto).toList())
+            .build();
+    log.info(
+        "message=\"entry search result tag:{}, result:{}\""
+            + ", feature=EntryServiceImpl, method=searchByTag",
+        tag,
+        searchEntryResult);
+    return searchEntryResult;
+  }
+
+  private SearchEntryResult searchByWord(String word, String languageCode, PageRequest page) {
+    Page<SearchEntry> result =
+        this.searchEntryFullTextSearchRepository.findByWordsAndLanguageCode(
+            word, languageCode, page);
+    SearchEntryResult searchEntryResult = null;
+    if (result.getTotalElements() == 0) {
+      result =
+          this.searchEntryFullTextSearchRepository.findByWordsAndLanguageCodeWithFuzzy(
+              word, languageCode, page);
     }
+    searchEntryResult =
+        SearchEntryResult.builder()
+            .entries(result.get().map(this.searchEntryServiceMapper::toSearchEntryDto).toList())
+            .build();
+    log.info(
+        "message=\"entry search result word:{}, languageCode:{}, result:{}\""
+            + ", feature=EntryServiceImpl, method=searchByWord",
+        word,
+        languageCode,
+        searchEntryResult);
+    return searchEntryResult;
+  }
 
-    private SearchEntryResult searchByTag(String tag, PageRequest page) {
-        Page<SearchEntry> result = this.searchEntryFullTextSearchRepository.findByTags(tag, page);
-        SearchEntryResult searchEntryResult = SearchEntryResult.builder()
-                .entries(result.get().map(this.searchEntryServiceMapper::toSearchEntryDto).toList())
-                .build();
-        log.info("message=\"entry search result tag:{}, result:{}\"" +
-                        ", feature=EntryServiceImpl, method=searchByTag"
-                , tag
-                , searchEntryResult);
-        return searchEntryResult;
+  @KafkaListener(
+      topics = {EntryModified.TOPIC_NAME},
+      groupId = "dictionary.searchentry")
+  private void saveEntryToFullTextSearchRepository(String stringEntryModified) {
+    try {
+      EntryModified entryModified =
+          this.objectMapper.readValue(stringEntryModified, EntryModified.class);
+      if (entryModified.isDeleted()) {
+        processDeleteEvent(entryModified);
+      } else {
+        processSaveEvent(entryModified);
+      }
+    } catch (JsonProcessingException e) {
+      log.error(
+          "message=\"an error occurred\", feature=EntryServiceImpl, method=entryModifiedEvent", e);
     }
+  }
 
-    private SearchEntryResult searchByWord(String word, String languageCode, PageRequest page) {
-        Page<SearchEntry> result = this.searchEntryFullTextSearchRepository.findByWordsAndLanguageCode(word
-                , languageCode
-                , page);
-        SearchEntryResult searchEntryResult = null;
-        if(result.getTotalElements() == 0) {
-            result = this.searchEntryFullTextSearchRepository.findByWordsAndLanguageCodeWithFuzzy(word
-                    , languageCode
-                    , page);
-        }
-        searchEntryResult = SearchEntryResult.builder()
-                .entries(result.get().map(this.searchEntryServiceMapper::toSearchEntryDto).toList())
-                .build();
-        log.info("message=\"entry search result word:{}, languageCode:{}, result:{}\"" +
-                        ", feature=EntryServiceImpl, method=searchByWord"
-                , word
-                , languageCode
-                , searchEntryResult);
-        return searchEntryResult;
-    }
+  private void processDeleteEvent(EntryModified entryModified) {
+    this.searchEntryFullTextSearchRepository.deleteById(entryModified.getId());
+    log.info(
+        "message=\"search entry deleted id:{}\", feature=EntryServiceImpl, method=saveEntryToElasticSearch",
+        entryModified.getId());
+  }
 
-
-
-    @KafkaListener(topics = {EntryModified.TOPIC_NAME}, groupId = "dictionary.searchentry")
-    private void saveEntryToFullTextSearchRepository(String stringEntryModified){
-        try {
-            EntryModified entryModified = this.objectMapper.readValue(stringEntryModified, EntryModified.class);
-            if(entryModified.isDeleted()){
-                processDeleteEvent(entryModified);
-            }else{
-                processSaveEvent(entryModified);
-            }
-        } catch (JsonProcessingException e) {
-            log.error("message=\"an error occurred\", feature=EntryServiceImpl, method=entryModifiedEvent", e);
-        }
-    }
-
-    private void processDeleteEvent(EntryModified entryModified) {
-        this.searchEntryFullTextSearchRepository.deleteById(entryModified.getId());
-        log.info("message=\"search entry deleted id:{}\", feature=EntryServiceImpl, method=saveEntryToElasticSearch", entryModified.getId());
-    }
-
-    private void processSaveEvent(EntryModified entryModified) {
-        SearchEntry entry = this.searchEntryServiceMapper.toSearchEntry(entryModified);
-        entry = this.searchEntryFullTextSearchRepository.save(entry);
-        log.info("message=\"search entry saved id:{}\", feature=EntryServiceImpl, method=saveEntryToElasticSearch", entry.getId());
-    }
+  private void processSaveEvent(EntryModified entryModified) {
+    SearchEntry entry = this.searchEntryServiceMapper.toSearchEntry(entryModified);
+    entry = this.searchEntryFullTextSearchRepository.save(entry);
+    log.info(
+        "message=\"search entry saved id:{}\", feature=EntryServiceImpl, method=saveEntryToElasticSearch",
+        entry.getId());
+  }
 }

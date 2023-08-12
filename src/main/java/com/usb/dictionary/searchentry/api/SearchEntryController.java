@@ -11,32 +11,38 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/entry")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000", maxAge = 3600, exposedHeaders = {"Access-Control-Allow-Origin"})
+@CrossOrigin(
+    origins = "http://localhost:3000",
+    maxAge = 3600,
+    exposedHeaders = {"Access-Control-Allow-Origin"})
 public class SearchEntryController {
 
-    private final SearchEntryControllerMapper searchEntryControllerMapper;
-    private final SearchEntryService searchEntryService;
+  private final SearchEntryControllerMapper searchEntryControllerMapper;
+  private final SearchEntryService searchEntryService;
 
-    @GetMapping("/search")
-    public ResponseEntity<SearchEntryGroupResponse> searchEntry(
-            @RequestParam(value = "tag", required = false) String tag
-            , @RequestParam(value = "word", required = false) String word
-            , @RequestParam("languageCode") String languageCode
-            , @RequestParam("page")int page){
+  @GetMapping("/search")
+  public ResponseEntity<SearchEntryGroupResponse> searchEntry(
+      @RequestParam(value = "tag", required = false) String tag,
+      @RequestParam(value = "word", required = false) String word,
+      @RequestParam("languageCode") String languageCode,
+      @RequestParam("page") int page) {
 
-        return ResponseEntity.ok(this.searchEntryControllerMapper
-                .toSearchEntryResponse(this.searchEntryService.search(SearchEntryRequest.builder()
-                        .tag(tag)
-                        .word(word)
-                        .sourceLanguageCode(languageCode)
-                        .page(page).build())));
-    }
+    return ResponseEntity.ok(
+        this.searchEntryControllerMapper.toSearchEntryResponse(
+            this.searchEntryService.search(
+                SearchEntryRequest.builder()
+                    .tag(tag)
+                    .word(word)
+                    .sourceLanguageCode(languageCode)
+                    .page(page)
+                    .build())));
+  }
 
-    @GetMapping("/search/random")
-    public ResponseEntity<SearchEntryGroupResponse> searchEntryRandom(
-            @RequestParam("languageCode") String languageCode
-            , @RequestParam("page")int page){
-        return ResponseEntity.ok(this.searchEntryControllerMapper
-                .toSearchEntryResponse(this.searchEntryService.searchRandom(languageCode, page)));
-    }
+  @GetMapping("/search/random")
+  public ResponseEntity<SearchEntryGroupResponse> searchEntryRandom(
+      @RequestParam("languageCode") String languageCode, @RequestParam("page") int page) {
+    return ResponseEntity.ok(
+        this.searchEntryControllerMapper.toSearchEntryResponse(
+            this.searchEntryService.searchRandom(languageCode, page)));
+  }
 }

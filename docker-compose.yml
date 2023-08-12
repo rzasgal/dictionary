@@ -63,6 +63,23 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+  neo4j:
+    image: neo4j:5.10.0
+    container_name: dictionary_neo4j
+    environment:
+      - NEO4J_AUTH=neo4j/neo4jTtk-
+      - NEO4J_server_config_strict__validation_enabled=false
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    expose:
+      - 7474
+      - 7687
+    healthcheck:
+      test: curl -s -u "neo4j:neo4jTtk-" http://localhost:7474/dbms/cluster/status > /dev/null || exit 1
+      interval: 15s
+      timeout: 3s
+      retries: 3
   app:
     image: 'dictionary:0.0.1-SNAPSHOT'
     build:
@@ -80,4 +97,6 @@ services:
       kafka:
         condition: service_healthy
       elasticsearch:
+        condition: service_healthy
+      neo4j:
         condition: service_healthy

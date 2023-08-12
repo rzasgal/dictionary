@@ -6,5 +6,5 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface SentenceServiceMapper {
-    SentenceDto toSentenceDto(Sentence sentence);
+  SentenceDto toSentenceDto(Sentence sentence);
 }

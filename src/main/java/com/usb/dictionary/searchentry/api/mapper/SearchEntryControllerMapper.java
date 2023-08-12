@@ -6,5 +6,5 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface SearchEntryControllerMapper {
-    SearchEntryGroupResponse toSearchEntryResponse(SearchEntryResult searchEntryResult);
+  SearchEntryGroupResponse toSearchEntryResponse(SearchEntryResult searchEntryResult);
 }

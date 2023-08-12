@@ -11,9 +11,10 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface SentenceControllerMapper {
 
-    SaveSentenceResponse toSaveSentenceResponse(SaveSentenceServiceResponse saveSentenceServiceResponse);
+  SaveSentenceResponse toSaveSentenceResponse(
+      SaveSentenceServiceResponse saveSentenceServiceResponse);
 
-    SaveSentenceServiceRequest toSaveSentenceServiceRequest(SaveSentenceRequest saveSentenceRequest);
+  SaveSentenceServiceRequest toSaveSentenceServiceRequest(SaveSentenceRequest saveSentenceRequest);
 
-    GetSentencesResponse toGetSentencesResponse(GetSentencesServiceResponse byEntry);
+  GetSentencesResponse toGetSentencesResponse(GetSentencesServiceResponse byEntry);
 }

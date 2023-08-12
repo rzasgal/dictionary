@@ -1,6 +1,6 @@
 spring:
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:9092
   data:
     mongodb:
       host: localhost
@@ -10,6 +10,12 @@ spring:
       database: dictionary
   elasticsearch:
     uris: http://localhost:9200
+  neo4j:
+    uri: bolt://localhost:7687
+
+    authentication:
+      username: neo4j
+      password: neo4jTtk-
 
 logging:
   level:

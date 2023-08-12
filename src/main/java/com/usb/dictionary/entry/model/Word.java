@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class Word {
-    private String name;
-    private String languageCode;
-    private String description;
+  private String name;
+  private String languageCode;
+  private String description;
 }
