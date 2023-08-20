@@ -22,8 +22,9 @@ To Stop Application running on local docker-compose stack
 ## Tech Stack
 
 - Java 17
-- Spring Boot 2.6.5
+- Spring Boot 2.7.4
 - MongoDb 4.4.13
+- neo4j:5.10.0
 - Elasticsearch 7.16.3
 - Kafka 3.2.0
 

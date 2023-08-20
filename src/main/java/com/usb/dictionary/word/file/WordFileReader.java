@@ -59,7 +59,11 @@ public class WordFileReader {
           wordList.add(
               WordDto.builder().content(word).languageCode(sourceLanguageCode).type(type).build());
           wordList.add(
-              WordDto.builder().content(meaning).languageCode(targetLanguageCode).type(type).build());
+              WordDto.builder()
+                  .content(meaning)
+                  .languageCode(targetLanguageCode)
+                  .type(type)
+                  .build());
           SaveServiceRequest newWord =
               SaveServiceRequest.builder()
                   .words(wordList)

@@ -68,11 +68,11 @@ public class WordController {
       @RequestParam("file") MultipartFile file,
       @RequestParam(value = "wordIndex") Integer wordIndex,
       @RequestParam(value = "sourceLanguageCodeIndex", required = false)
-      Integer sourceLanguageCodeIndex,
+          Integer sourceLanguageCodeIndex,
       @RequestParam(value = "typeIndex") Integer typeIndex,
       @RequestParam(value = "meaningIndex") Integer meaningIndex,
       @RequestParam(value = "targetLanguageCodeIndex", required = false)
-      Integer targetLanguageCodeIndex,
+          Integer targetLanguageCodeIndex,
       @RequestParam(value = "sheetIndex", required = false) Integer sheetIndex)
       throws IOException {
     this.wordService.readFromFile(
