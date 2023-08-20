@@ -1,35 +1,43 @@
 package com.usb.dictionary.word.service.impl;
 
+import static com.usb.dictionary.word.file.WordFileReader.readFromXlsxFile;
+import static java.util.Collections.emptySet;
 import static java.util.function.Function.identity;
 import static org.springframework.util.CollectionUtils.isEmpty;
 import static org.springframework.util.StringUtils.hasText;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.usb.dictionary.exception.BusinessException;
+import com.usb.dictionary.sentence.model.Sentence;
+import com.usb.dictionary.sentence.service.SentenceService;
+import com.usb.dictionary.sentence.service.response.SentenceDto;
 import com.usb.dictionary.word.event.WordModifiedEvent;
+import com.usb.dictionary.word.file.request.ReadFromXlsxFileServiceRequest;
 import com.usb.dictionary.word.repository.elasticsearch.WordSearchRepository;
-import com.usb.dictionary.word.repository.neo4j.MeaningRepository;
 import com.usb.dictionary.word.repository.neo4j.WordRepository;
+import com.usb.dictionary.word.service.MeaningService;
 import com.usb.dictionary.word.service.WordService;
-import com.usb.dictionary.word.service.event.MeaningModifiedEvent;
 import com.usb.dictionary.word.service.model.Meaning;
 import com.usb.dictionary.word.service.model.MeaningDto;
 import com.usb.dictionary.word.service.model.Word;
 import com.usb.dictionary.word.service.model.WordDto;
 import com.usb.dictionary.word.service.model.WordSearch;
 import com.usb.dictionary.word.service.model.WordWithMeaningsDto;
-import com.usb.dictionary.word.service.request.FindWordsServiceRequest;
-import com.usb.dictionary.word.service.request.SaveWordWithMeaningServiceRequest;
-import com.usb.dictionary.word.service.request.SearchWordsServiceRequest;
-import com.usb.dictionary.word.service.response.FindWordsServiceResponse;
-import com.usb.dictionary.word.service.response.SaveWordWithMeaningServiceResponse;
-import com.usb.dictionary.word.service.response.SearchWordsServiceResponse;
-import java.util.Collections;
+import com.usb.dictionary.word.service.request.AddSentenceServiceRequest;
+import com.usb.dictionary.word.service.request.FindByIdsServiceRequest;
+import com.usb.dictionary.word.service.request.SaveServiceRequest;
+import com.usb.dictionary.word.service.request.SearchServiceRequest;
+import com.usb.dictionary.word.service.response.AddSentenceServiceResponse;
+import com.usb.dictionary.word.service.response.FindByIdsServiceResponse;
+import com.usb.dictionary.word.service.response.SaveServiceResponse;
+import com.usb.dictionary.word.service.response.SearchServiceResponse;
+import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +46,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 @Service
 @Slf4j
@@ -46,10 +53,13 @@ import org.springframework.util.StringUtils;
 public class WordServiceImpl implements WordService {
 
   private static final int PAGE_SIZE = 10;
+  private static final int WORD_NOT_FOUND = 1_01;
 
   private final WordRepository wordRepository;
 
-  private final MeaningRepository meaningRepository;
+  private final MeaningService meaningService;
+
+  private final SentenceService sentenceService;
 
   private final WordSearchRepository wordSearchRepository;
 
@@ -58,23 +68,29 @@ public class WordServiceImpl implements WordService {
   private final ObjectMapper objectMapper;
 
   @Override
-  public SaveWordWithMeaningServiceResponse saveWordWithMeaning(
-      SaveWordWithMeaningServiceRequest request) {
-    Set<Word> words = request.getWords().stream().map(this::saveWord).collect(Collectors.toSet());
-    this.saveMeaning(request.getMeaning(), words);
-    this.wordRepository
-        .findAllById(words.stream().map(Word::getId).collect(Collectors.toSet()))
-        .forEach(this::publishWordModifiedEvent);
+  public SaveServiceResponse save(SaveServiceRequest request) {
+    Meaning meaning;
+    if (request.getMeaning() != null) {
+      meaning =
+          this.meaningService.save(
+              MeaningDto.builder()
+                  .id(request.getMeaning().getId())
+                  .descriptions(request.getMeaning().getDescriptions())
+                  .build());
+    } else {
+      meaning = null;
+    }
+    request.getWords().forEach(wordDto -> this.save(wordDto, meaning));
     log.info(
         "message=\"words are saved with meaning\", feature=WordServiceImpl, method=saveWordWithMeaning");
-    return SaveWordWithMeaningServiceResponse.builder().build();
+    return SaveServiceResponse.builder().build();
   }
 
   @Override
-  public FindWordsServiceResponse findWords(FindWordsServiceRequest request) {
+  public FindByIdsServiceResponse findByIds(FindByIdsServiceRequest request) {
     List<Word> words = this.wordRepository.findAllById(request.getWordIds());
-    FindWordsServiceResponse response =
-        FindWordsServiceResponse.builder()
+    FindByIdsServiceResponse response =
+        FindByIdsServiceResponse.builder()
             .words(
                 words.stream()
                     .map(
@@ -98,7 +114,7 @@ public class WordServiceImpl implements WordService {
   }
 
   @Override
-  public SearchWordsServiceResponse search(SearchWordsServiceRequest request) {
+  public SearchServiceResponse search(SearchServiceRequest request) {
     Page<WordSearch> result =
         hasText(request.getContent())
             ? searchWordByContent(request.getContent(), request.getPage())
@@ -107,7 +123,7 @@ public class WordServiceImpl implements WordService {
                 : searchRandomWords(request.getLanguageCode(), request.getPage());
 
     Map<Long, Meaning> meanings = findWordMeanings(result);
-    SearchWordsServiceResponse response = mapToSearchWordServiceResponse(result, meanings);
+    SearchServiceResponse response = mapToSearchWordServiceResponse(result, meanings);
     log.info(
         "message=\"found words: "
             + result
@@ -115,6 +131,35 @@ public class WordServiceImpl implements WordService {
             + request
             + "\", featue=WordServiceImpl, method=search");
     return response;
+  }
+
+  @Override
+  public AddSentenceServiceResponse addSentence(AddSentenceServiceRequest request) {
+    Word word =
+        this.wordRepository
+            .findById(request.getWordId())
+            .orElseThrow(() -> new BusinessException("", WORD_NOT_FOUND));
+    Sentence sentence =
+        this.sentenceService.save(
+            SentenceDto.builder()
+                .id(request.getSentence().getId())
+                .content(request.getSentence().getContent())
+                .tags(request.getSentence().getTags())
+                .build());
+    word.getSentences().add(sentence);
+    word = this.wordRepository.save(word);
+    log.info(
+        "message=\"sentence :"
+            + sentence.getId()
+            + ", added to word: "
+            + word.getId()
+            + "\", feature=WordServiceImpl, method=addSentence");
+    return AddSentenceServiceResponse.builder().build();
+  }
+
+  @Override
+  public void readFromFile(ReadFromXlsxFileServiceRequest request) throws IOException {
+    readFromXlsxFile(request).forEach(this::save);
   }
 
   private Page<WordSearch> searchByTag(String tag, int page) {
@@ -135,16 +180,14 @@ public class WordServiceImpl implements WordService {
             .get()
             .flatMap(wordSearch -> wordSearch.getMeanings().stream())
             .collect(Collectors.toSet());
-    Map<Long, Meaning> meanings =
-        this.meaningRepository.findAllById(meaningIds).stream()
-            .collect(Collectors.toMap(Meaning::getId, identity()));
-    return meanings;
+    return this.meaningService.findByIds(meaningIds).stream()
+        .collect(Collectors.toMap(Meaning::getId, identity()));
   }
 
-  private SearchWordsServiceResponse mapToSearchWordServiceResponse(
+  private SearchServiceResponse mapToSearchWordServiceResponse(
       Page<WordSearch> result, Map<Long, Meaning> meanings) {
-    SearchWordsServiceResponse response =
-        SearchWordsServiceResponse.builder()
+    SearchServiceResponse response =
+        SearchServiceResponse.builder()
             .pageSize(PAGE_SIZE)
             .totalElements(result.getTotalElements())
             .words(
@@ -157,6 +200,7 @@ public class WordServiceImpl implements WordService {
                                 .content(wordSearch.getContent())
                                 .languageCode(wordSearch.getLanguageCode())
                                 .description(wordSearch.getDescription())
+                                .type(wordSearch.getType())
                                 .tags(wordSearch.getTags())
                                 .meanings(
                                     wordSearch.getMeanings().stream()
@@ -201,34 +245,29 @@ public class WordServiceImpl implements WordService {
     }
   }
 
-  private Meaning saveMeaning(MeaningDto meaningDto, Set<Word> words) {
-    Meaning meaning =
-        meaningDto.getId() != null
-            ? this.meaningRepository
-                .findById(meaningDto.getId())
-                .orElse(
-                    Meaning.builder().descriptions(new HashSet<>()).words(new HashSet<>()).build())
-            : Meaning.builder().descriptions(new HashSet<>()).words(new HashSet<>()).build();
-    meaning.getDescriptions().addAll(meaningDto.getDescriptions());
-    meaning.getWords().addAll(words);
-    meaning = this.meaningRepository.save(meaning);
-    log.info(
-        "message=\"meaning saved, id:\""
-            + meaning.getId()
-            + ", feature=WordServiceImpl, method=saveMeaning");
-    this.publishMeaningModifiedEvent(meaning);
-    return meaning;
-  }
-
-  private Word saveWord(WordDto wordDto) {
+  private Word save(WordDto wordDto, Meaning meaning) {
     Word word =
         wordDto.getId() != null
-            ? this.wordRepository.findById(wordDto.getId()).orElse(Word.builder().build())
-            : Word.builder().build();
+            ? this.wordRepository
+                .findById(wordDto.getId())
+                .orElse(Word.builder().meanings(new HashSet<>()).tags(new HashSet<>()).build())
+            : this.wordRepository
+                .findByContent(wordDto.getContent())
+                .orElse(Word.builder().meanings(new HashSet<>()).tags(new HashSet<>()).build());
     word.setContent(wordDto.getContent());
     word.setDescription(wordDto.getDescription());
     word.setLanguageCode(wordDto.getLanguageCode());
-    word.setTags(wordDto.getTags());
+    word.setType(wordDto.getType());
+    if (wordDto.getTags() != null) {
+      if (isEmpty(wordDto.getTags())) {
+        word.setTags(emptySet());
+      } else {
+        word.getTags().addAll(wordDto.getTags());
+      }
+    }
+    if (meaning != null) {
+      word.getMeanings().add(meaning);
+    }
     word = this.wordRepository.save(word);
     log.info("message=\"word saved:\"" + word.getId() + ", feature=WordServiceImpl, method=save");
     this.publishWordModifiedEvent(word);
@@ -252,7 +291,8 @@ public class WordServiceImpl implements WordService {
                           ? word.getMeanings().stream()
                               .map(Meaning::getId)
                               .collect(Collectors.toSet())
-                          : Collections.emptySet())
+                          : emptySet())
+                  .timestamp(ZonedDateTime.now())
                   .build()));
 
       log.info(
@@ -262,30 +302,6 @@ public class WordServiceImpl implements WordService {
     } catch (JsonProcessingException e) {
       log.error(
           "message=\"error occured while trying to produce event\", feature=WordServiceImpl, method=publishWordModifiedEvent");
-    }
-  }
-
-  private void publishMeaningModifiedEvent(Meaning meaning) {
-    try {
-      kafkaTemplate.send(
-          MeaningModifiedEvent.TOPIC_NAME,
-          meaning.getId().toString(),
-          this.objectMapper.writeValueAsString(
-              MeaningModifiedEvent.builder()
-                  .id(meaning.getId())
-                  .descriptions(meaning.getDescriptions())
-                  .words(
-                      !isEmpty(meaning.getWords())
-                          ? meaning.getWords().stream().map(Word::getId).collect(Collectors.toSet())
-                          : Collections.emptySet())
-                  .build()));
-      log.info(
-          "message=\"meaning modified event published, id:\""
-              + meaning.getId()
-              + ", feature=WordServiceImpl, method=publishMeaningModifiedEvent");
-    } catch (JsonProcessingException e) {
-      log.error(
-          "message=\"error occured while trying to produce event\", feature=WordServiceImpl, method=publishMeaningModifiedEvent");
     }
   }
 }

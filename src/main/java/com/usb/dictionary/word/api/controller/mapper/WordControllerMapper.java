@@ -1,27 +1,31 @@
 package com.usb.dictionary.word.api.controller.mapper;
 
-import com.usb.dictionary.word.api.controller.request.FindWordsRequest;
+import com.usb.dictionary.word.api.controller.request.AddSentenceRequest;
+import com.usb.dictionary.word.api.controller.request.FindByIdsRequest;
 import com.usb.dictionary.word.api.controller.request.SaveWordRequest;
 import com.usb.dictionary.word.api.controller.request.SearchWordRequest;
-import com.usb.dictionary.word.api.controller.response.FindWordsResponse;
-import com.usb.dictionary.word.api.controller.response.SearchWordResponse;
-import com.usb.dictionary.word.service.request.FindWordsServiceRequest;
-import com.usb.dictionary.word.service.request.SaveWordWithMeaningServiceRequest;
-import com.usb.dictionary.word.service.request.SearchWordsServiceRequest;
-import com.usb.dictionary.word.service.response.FindWordsServiceResponse;
-import com.usb.dictionary.word.service.response.SearchWordsServiceResponse;
+import com.usb.dictionary.word.api.controller.response.FindByIdsResponse;
+import com.usb.dictionary.word.api.controller.response.SearcResponse;
+import com.usb.dictionary.word.service.request.AddSentenceServiceRequest;
+import com.usb.dictionary.word.service.request.FindByIdsServiceRequest;
+import com.usb.dictionary.word.service.request.SaveServiceRequest;
+import com.usb.dictionary.word.service.request.SearchServiceRequest;
+import com.usb.dictionary.word.service.response.FindByIdsServiceResponse;
+import com.usb.dictionary.word.service.response.SearchServiceResponse;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface WordControllerMapper {
 
-  SaveWordWithMeaningServiceRequest toSaveWordWithMeaningServiceRequest(SaveWordRequest request);
+  SaveServiceRequest toSaveServiceRequest(SaveWordRequest request);
 
-  FindWordsResponse toFindWordsResponse(FindWordsServiceResponse response);
+  FindByIdsResponse toFindByIdsResponse(FindByIdsServiceResponse response);
 
-  FindWordsServiceRequest toFindWordsServiceRequest(FindWordsRequest request);
+  FindByIdsServiceRequest toFindByIdsServiceRequest(FindByIdsRequest request);
 
-  SearchWordsServiceRequest toSearchWordsServiceRequest(SearchWordRequest request);
+  SearchServiceRequest toSearchServiceRequest(SearchWordRequest request);
 
-  SearchWordResponse toSearchWordResponse(SearchWordsServiceResponse search);
+  SearcResponse toSearchResponse(SearchServiceResponse search);
+
+  AddSentenceServiceRequest toAddSentenceServiceRequest(AddSentenceRequest request);
 }

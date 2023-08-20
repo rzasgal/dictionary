@@ -2,7 +2,7 @@ package com.usb.dictionary.word.api.controller.request;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SaveWordRequest implements Serializable {
+public class SaveRequestMeaningDto implements Serializable {
 
-  @Serial private static final long serialVersionUID = 1050633394682162639L;
-  private List<SaveRequestWordDto> words;
-  private SaveRequestMeaningDto meaning;
+  @Serial private static final long serialVersionUID = 7377835145943035000L;
+  private Long id;
+  private Set<String> descriptions;
 }

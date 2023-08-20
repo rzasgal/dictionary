@@ -2,6 +2,7 @@ package com.usb.dictionary.word.service.event;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.ZonedDateTime;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,4 +20,5 @@ public class MeaningModifiedEvent implements Serializable {
   private Long id;
   private Set<String> descriptions;
   private Set<Long> words;
+  private ZonedDateTime timestamp;
 }

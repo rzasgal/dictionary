@@ -1,4 +1,4 @@
-package com.usb.dictionary.word.service.model;
+package com.usb.dictionary.word.api.controller.request;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -7,23 +7,18 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(indexName = "word")
-public class WordSearch implements Serializable {
+public class SaveRequestWordDto implements Serializable {
 
-  @Serial private static final long serialVersionUID = -183960536466399487L;
-
-  @Id private Long id;
+  @Serial private static final long serialVersionUID = -8408322078158196663L;
+  private Long id;
   private String content;
   private String languageCode;
   private String description;
   private String type;
   private Set<String> tags;
-  private Set<Long> meanings;
 }

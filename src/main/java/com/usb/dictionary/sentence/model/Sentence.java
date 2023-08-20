@@ -7,18 +7,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Node;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(collection = "sentence")
+@Node(value = "sentence")
 public class Sentence {
 
-  @Id private String id;
+  @Id @GeneratedValue private Long id;
   private String content;
   private Set<String> tags;
-  private Set<String> entryIds;
   @Version private String version;
 }

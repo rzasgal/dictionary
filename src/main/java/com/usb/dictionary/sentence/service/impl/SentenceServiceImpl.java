@@ -1,24 +1,21 @@
 package com.usb.dictionary.sentence.service.impl;
 
-import static org.elasticsearch.common.Strings.hasText;
+import static java.util.Collections.emptySet;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.usb.dictionary.sentence.event.SentenceModified;
 import com.usb.dictionary.sentence.model.Sentence;
-import com.usb.dictionary.sentence.repository.mongo.SentenceMainStorageRepository;
+import com.usb.dictionary.sentence.repository.neo4j.SentenceRepository;
 import com.usb.dictionary.sentence.service.SentenceService;
-import com.usb.dictionary.sentence.service.mapper.SentenceServiceMapper;
-import com.usb.dictionary.sentence.service.request.SaveSentenceServiceRequest;
-import com.usb.dictionary.sentence.service.response.GetSentencesServiceResponse;
-import com.usb.dictionary.sentence.service.response.SaveSentenceServiceResponse;
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.Set;
+import com.usb.dictionary.sentence.service.request.SaveServiceRequest;
+import com.usb.dictionary.sentence.service.response.SaveServiceResponse;
+import com.usb.dictionary.sentence.service.response.SentenceDto;
+import java.time.ZonedDateTime;
+import java.util.HashSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -27,53 +24,57 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SentenceServiceImpl implements SentenceService {
 
-  private static final int pageSize = 10;
   private final KafkaTemplate<String, String> kafkaTemplate;
   private final ObjectMapper objectMapper;
-  private final SentenceMainStorageRepository sentenceMainStorageRepository;
-  private final SentenceServiceMapper sentenceServiceMapper;
+  private final SentenceRepository sentenceRepository;
 
   @Override
-  public GetSentencesServiceResponse getByEntry(String entryId, int page) {
-    Page<Sentence> sentences =
-        this.sentenceMainStorageRepository.findByEntryIds(
-            Set.of(entryId), PageRequest.of(page, pageSize));
-    return GetSentencesServiceResponse.builder()
-        .sentences(sentences.get().map(this.sentenceServiceMapper::toSentenceDto).toList())
+  public SaveServiceResponse save(SaveServiceRequest request) {
+    return SaveServiceResponse.builder()
+        .id(
+            this.save(
+                    SentenceDto.builder()
+                        .content(request.getContent())
+                        .tags(request.getTags())
+                        .id(request.getId())
+                        .build())
+                .getId())
         .build();
   }
 
   @Override
-  public SaveSentenceServiceResponse save(SaveSentenceServiceRequest saveSentenceServiceRequest) {
+  public Sentence save(SentenceDto sentenceDto) {
     Sentence sentence =
-        Sentence.builder()
-            .id(saveSentenceServiceRequest.getId())
-            .content(saveSentenceServiceRequest.getContent())
-            .tags(saveSentenceServiceRequest.getTags())
-            .entryIds(saveSentenceServiceRequest.getEntryIds())
-            .build();
-    if (hasText(saveSentenceServiceRequest.getId())) {
-      Optional<Sentence> optionalSentence =
-          this.sentenceMainStorageRepository.findById(saveSentenceServiceRequest.getId());
-      if (optionalSentence.isPresent()) {
-        sentence.setVersion(optionalSentence.get().getVersion());
+        sentenceDto.getId() != null
+            ? this.sentenceRepository
+                .findById(sentenceDto.getId())
+                .orElse(Sentence.builder().tags(new HashSet<>()).build())
+            : Sentence.builder().tags(new HashSet<>()).build();
+    sentence.setId(sentenceDto.getId());
+    sentence.setContent(sentenceDto.getContent());
+    if (sentenceDto.getTags() != null) {
+      if (isEmpty(sentenceDto.getTags())) {
+        sentence.setTags(emptySet());
+      } else {
+        sentence.getTags().addAll(sentenceDto.getTags());
       }
     }
-    sentence = this.sentenceMainStorageRepository.save(sentence);
+    sentence = this.sentenceRepository.save(sentence);
     log.info(
         "message=\"sentence:'{}', saved:{}\", method=save, feature=SentenceServiceImpl",
-        saveSentenceServiceRequest.getContent(),
+        sentenceDto.getContent(),
         sentence.getId());
     generateSentenceModifiedEvent(sentence);
-    return SaveSentenceServiceResponse.builder().id(sentence.getId()).build();
+    return sentence;
   }
 
   private void generateSentenceModifiedEvent(Sentence sentence) {
     SentenceModified sentenceModified =
         SentenceModified.builder()
-            .timestamp(LocalDateTime.now())
+            .id(sentence.getId())
             .version(sentence.getVersion())
             .tags(sentence.getTags())
+            .timestamp(ZonedDateTime.now())
             .build();
     try {
       this.kafkaTemplate.send(

@@ -1,4 +1,4 @@
-package com.usb.dictionary.sentence.api.request;
+package com.usb.dictionary.sentence.service.request;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -9,12 +9,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SaveSentenceRequest implements Serializable {
-  @Serial private static final long serialVersionUID = 4504918765701954888L;
-  private String id;
+@Builder
+public class SaveServiceRequest implements Serializable {
+  @Serial private static final long serialVersionUID = -4765459970105690645L;
+  private Long id;
   private String content;
   private Set<String> tags;
 }

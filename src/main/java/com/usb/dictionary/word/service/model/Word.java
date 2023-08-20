@@ -1,5 +1,6 @@
 package com.usb.dictionary.word.service.model;
 
+import com.usb.dictionary.sentence.model.Sentence;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Set;
@@ -26,11 +27,15 @@ public class Word implements Serializable {
   private String content;
   private String languageCode;
   private String description;
+  private String type;
   private Set<String> tags;
 
   @EqualsAndHashCode.Exclude
   @Relationship(type = "means", direction = Direction.OUTGOING)
   private Set<Meaning> meanings;
+
+  @Relationship(type = "sentence", direction = Direction.OUTGOING)
+  private Set<Sentence> sentences;
 
   @Version private Long version;
 }
