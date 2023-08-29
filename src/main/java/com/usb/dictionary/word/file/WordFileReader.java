@@ -1,5 +1,7 @@
 package com.usb.dictionary.word.file;
 
+import static java.util.Collections.singleton;
+
 import com.usb.dictionary.exception.BusinessException;
 import com.usb.dictionary.word.file.request.ReadFromXlsxFileServiceRequest;
 import com.usb.dictionary.word.service.model.MeaningDto;
@@ -9,7 +11,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -55,20 +59,18 @@ public class WordFileReader {
         String[] meanings = targetWord.split(",");
         for (String meaning : meanings) {
           meaning = meaning.trim();
-          List<WordDto> wordList = new ArrayList<>();
-          wordList.add(
-              WordDto.builder().content(word).languageCode(sourceLanguageCode).type(type).build());
-          wordList.add(
-              WordDto.builder()
-                  .content(meaning)
-                  .languageCode(targetLanguageCode)
-                  .type(type)
-                  .build());
+          Set<WordDto> wordList = new HashSet<>();
+          wordList.add(WordDto.builder().content(word).languageCode(sourceLanguageCode).build());
+          wordList.add(WordDto.builder().content(meaning).languageCode(targetLanguageCode).build());
           SaveServiceRequest newWord =
               SaveServiceRequest.builder()
                   .words(wordList)
-                  .meaning(
-                      MeaningDto.builder().descriptions(Collections.asSet(meaning, word)).build())
+                  .meanings(
+                      singleton(
+                          MeaningDto.builder()
+                              .type(type)
+                              .descriptions(Collections.asSet(meaning, word))
+                              .build()))
                   .build();
           saveEntryServiceRequestList.add(newWord);
         }

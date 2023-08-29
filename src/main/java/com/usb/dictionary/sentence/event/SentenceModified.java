@@ -20,6 +20,6 @@ public class SentenceModified implements Serializable {
   private Long id;
   private String content;
   private Set<String> tags;
-  private String version;
+  private Long version;
   private ZonedDateTime timestamp;
 }

@@ -18,6 +18,7 @@ import com.usb.dictionary.word.repository.elasticsearch.WordSearchRepository;
 import com.usb.dictionary.word.repository.neo4j.WordRepository;
 import com.usb.dictionary.word.service.MeaningService;
 import com.usb.dictionary.word.service.WordService;
+import com.usb.dictionary.word.service.mapper.WordServiceMapper;
 import com.usb.dictionary.word.service.model.Meaning;
 import com.usb.dictionary.word.service.model.MeaningDto;
 import com.usb.dictionary.word.service.model.Word;
@@ -29,7 +30,9 @@ import com.usb.dictionary.word.service.request.FindByIdsServiceRequest;
 import com.usb.dictionary.word.service.request.SaveServiceRequest;
 import com.usb.dictionary.word.service.request.SearchServiceRequest;
 import com.usb.dictionary.word.service.response.AddSentenceServiceResponse;
+import com.usb.dictionary.word.service.response.FindByIdServiceResponse;
 import com.usb.dictionary.word.service.response.FindByIdsServiceResponse;
+import com.usb.dictionary.word.service.response.FindSentencesServiceResponse;
 import com.usb.dictionary.word.service.response.SaveServiceResponse;
 import com.usb.dictionary.word.service.response.SearchServiceResponse;
 import java.io.IOException;
@@ -53,7 +56,10 @@ import org.springframework.stereotype.Service;
 public class WordServiceImpl implements WordService {
 
   private static final int PAGE_SIZE = 10;
+
   private static final int WORD_NOT_FOUND = 1_01;
+
+  private final WordServiceMapper wordServiceMapper;
 
   private final WordRepository wordRepository;
 
@@ -69,21 +75,60 @@ public class WordServiceImpl implements WordService {
 
   @Override
   public SaveServiceResponse save(SaveServiceRequest request) {
-    Meaning meaning;
-    if (request.getMeaning() != null) {
-      meaning =
-          this.meaningService.save(
-              MeaningDto.builder()
-                  .id(request.getMeaning().getId())
-                  .descriptions(request.getMeaning().getDescriptions())
-                  .build());
-    } else {
-      meaning = null;
-    }
-    request.getWords().forEach(wordDto -> this.save(wordDto, meaning));
+    Set<Meaning> meanings =
+        !isEmpty(request.getMeanings())
+            ? request.getMeanings().stream()
+                .map(this.meaningService::save)
+                .collect(Collectors.toSet())
+            : request.getMeanings() != null ? emptySet() : null;
+
+    request.getWords().forEach(wordDto -> this.save(wordDto, meanings));
     log.info(
         "message=\"words are saved with meaning\", feature=WordServiceImpl, method=saveWordWithMeaning");
     return SaveServiceResponse.builder().build();
+  }
+
+  @Override
+  public AddSentenceServiceResponse addSentence(AddSentenceServiceRequest request) {
+    if (!this.wordRepository.existsById(request.getWordId())) {
+      throw new BusinessException("", WORD_NOT_FOUND);
+    }
+    Sentence sentence =
+        this.sentenceService.save(
+            SentenceDto.builder()
+                .id(request.getSentence().getId())
+                .content(request.getSentence().getContent())
+                .tags(request.getSentence().getTags())
+                .build());
+    Word word =
+        this.wordRepository
+            .findById(request.getWordId())
+            .orElseThrow(() -> new BusinessException("", WORD_NOT_FOUND));
+    word.getSentences().add(sentence);
+    word = this.wordRepository.save(word);
+    log.info(
+        "message=\"sentence :"
+            + sentence.getId()
+            + ", added to word: "
+            + word.getId()
+            + "\", feature=WordServiceImpl, method=addSentence");
+    return AddSentenceServiceResponse.builder().build();
+  }
+
+  @Override
+  public void readFromFile(ReadFromXlsxFileServiceRequest request) throws IOException {
+    readFromXlsxFile(request).forEach(this::save);
+  }
+
+  @Override
+  public FindByIdServiceResponse findById(Long wordId) {
+    Word word =
+        this.wordRepository
+            .findById(wordId)
+            .orElseThrow(() -> new BusinessException("", WORD_NOT_FOUND));
+    log.info(
+        "message=\"word if found for:" + wordId + "\", feature=WordServiceImpl, method=findById");
+    return this.wordServiceMapper.toFindByIdServiceResponse(word);
   }
 
   @Override
@@ -92,17 +137,7 @@ public class WordServiceImpl implements WordService {
     FindByIdsServiceResponse response =
         FindByIdsServiceResponse.builder()
             .words(
-                words.stream()
-                    .map(
-                        word ->
-                            WordDto.builder()
-                                .id(word.getId())
-                                .content(word.getContent())
-                                .languageCode(word.getLanguageCode())
-                                .description(word.getDescription())
-                                .tags(word.getTags())
-                                .build())
-                    .collect(Collectors.toSet()))
+                words.stream().map(this.wordServiceMapper::toWordDto).collect(Collectors.toSet()))
             .build();
     log.info(
         "message=\"words found: "
@@ -134,32 +169,17 @@ public class WordServiceImpl implements WordService {
   }
 
   @Override
-  public AddSentenceServiceResponse addSentence(AddSentenceServiceRequest request) {
-    Word word =
-        this.wordRepository
-            .findById(request.getWordId())
-            .orElseThrow(() -> new BusinessException("", WORD_NOT_FOUND));
-    Sentence sentence =
-        this.sentenceService.save(
-            SentenceDto.builder()
-                .id(request.getSentence().getId())
-                .content(request.getSentence().getContent())
-                .tags(request.getSentence().getTags())
-                .build());
-    word.getSentences().add(sentence);
-    word = this.wordRepository.save(word);
-    log.info(
-        "message=\"sentence :"
-            + sentence.getId()
-            + ", added to word: "
-            + word.getId()
-            + "\", feature=WordServiceImpl, method=addSentence");
-    return AddSentenceServiceResponse.builder().build();
-  }
-
-  @Override
-  public void readFromFile(ReadFromXlsxFileServiceRequest request) throws IOException {
-    readFromXlsxFile(request).forEach(this::save);
+  public FindSentencesServiceResponse findSentences(Long wordId) {
+    return FindSentencesServiceResponse.builder()
+        .sentences(
+            this.wordRepository
+                .findById(wordId)
+                .orElseThrow(() -> new BusinessException("", WORD_NOT_FOUND))
+                .getSentences()
+                .stream()
+                .map(this.wordServiceMapper::toSentenceDto)
+                .collect(Collectors.toSet()))
+        .build();
   }
 
   private Page<WordSearch> searchByTag(String tag, int page) {
@@ -200,7 +220,6 @@ public class WordServiceImpl implements WordService {
                                 .content(wordSearch.getContent())
                                 .languageCode(wordSearch.getLanguageCode())
                                 .description(wordSearch.getDescription())
-                                .type(wordSearch.getType())
                                 .tags(wordSearch.getTags())
                                 .meanings(
                                     wordSearch.getMeanings().stream()
@@ -209,6 +228,7 @@ public class WordServiceImpl implements WordService {
                                               var meaning = meanings.get(meaningId);
                                               return MeaningDto.builder()
                                                   .id(meaning.getId())
+                                                  .type(meaning.getType())
                                                   .descriptions(meaning.getDescriptions())
                                                   .build();
                                             })
@@ -245,7 +265,7 @@ public class WordServiceImpl implements WordService {
     }
   }
 
-  private Word save(WordDto wordDto, Meaning meaning) {
+  private Word save(WordDto wordDto, Set<Meaning> meanings) {
     Word word =
         wordDto.getId() != null
             ? this.wordRepository
@@ -257,7 +277,6 @@ public class WordServiceImpl implements WordService {
     word.setContent(wordDto.getContent());
     word.setDescription(wordDto.getDescription());
     word.setLanguageCode(wordDto.getLanguageCode());
-    word.setType(wordDto.getType());
     if (wordDto.getTags() != null) {
       if (isEmpty(wordDto.getTags())) {
         word.setTags(emptySet());
@@ -265,8 +284,12 @@ public class WordServiceImpl implements WordService {
         word.getTags().addAll(wordDto.getTags());
       }
     }
-    if (meaning != null) {
-      word.getMeanings().add(meaning);
+    if (meanings != null) {
+      if (isEmpty(meanings)) {
+        word.setMeanings(emptySet());
+      } else {
+        word.getMeanings().addAll(meanings);
+      }
     }
     word = this.wordRepository.save(word);
     log.info("message=\"word saved:\"" + word.getId() + ", feature=WordServiceImpl, method=save");

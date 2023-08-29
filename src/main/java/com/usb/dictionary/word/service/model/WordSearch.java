@@ -23,7 +23,6 @@ public class WordSearch implements Serializable {
   private String content;
   private String languageCode;
   private String description;
-  private String type;
   private Set<String> tags;
   private Set<Long> meanings;
 }

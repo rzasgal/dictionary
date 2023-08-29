@@ -14,6 +14,5 @@ import lombok.NoArgsConstructor;
 public class AddSentenceRequest implements Serializable {
 
   @Serial private static final long serialVersionUID = 4966424300345018622L;
-  private Long wordId;
   private AddSentenceRequestSentenceDto sentence;
 }

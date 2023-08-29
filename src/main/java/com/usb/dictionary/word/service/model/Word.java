@@ -19,15 +19,15 @@ import org.springframework.data.neo4j.core.schema.Relationship.Direction;
 @NoArgsConstructor
 @Builder
 @Data
-@ToString(exclude = "meanings")
+@ToString(exclude = {"meanings", "sentences"})
 public class Word implements Serializable {
+
   @Serial private static final long serialVersionUID = -2297711407675577742L;
 
   @Id @GeneratedValue private Long id;
   private String content;
   private String languageCode;
   private String description;
-  private String type;
   private Set<String> tags;
 
   @EqualsAndHashCode.Exclude

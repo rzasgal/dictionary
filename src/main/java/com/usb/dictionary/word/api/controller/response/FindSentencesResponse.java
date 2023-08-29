@@ -12,10 +12,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SearchWordResponseMeaningDto implements Serializable {
+public class FindSentencesResponse implements Serializable {
 
-  @Serial private static final long serialVersionUID = 402962395608344205L;
-  private Long id;
-  private String type;
-  private Set<String> descriptions;
+  @Serial private static final long serialVersionUID = 3641123492386725897L;
+  private Set<FindSentencesResponseSentenceDto> sentences;
 }

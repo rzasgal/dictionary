@@ -18,6 +18,7 @@ public class MeaningModifiedEvent implements Serializable {
   public static final String TOPIC_NAME = "dictionary.meaning";
   @Serial private static final long serialVersionUID = 4977166007295570737L;
   private Long id;
+  private String type;
   private Set<String> descriptions;
   private Set<Long> words;
   private ZonedDateTime timestamp;

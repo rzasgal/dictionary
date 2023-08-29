@@ -1,0 +1,5 @@
+MATCH (p:Product)
+DELETE p
+
+MATCH (n)
+DETACH DELETE n

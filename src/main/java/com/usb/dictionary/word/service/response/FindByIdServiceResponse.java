@@ -1,7 +1,6 @@
-package com.usb.dictionary.word.service.request;
+package com.usb.dictionary.word.service.response;
 
 import com.usb.dictionary.word.service.model.MeaningDto;
-import com.usb.dictionary.word.service.model.WordDto;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Set;
@@ -14,8 +13,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SaveServiceRequest implements Serializable {
-  @Serial private static final long serialVersionUID = -5574679361257260728L;
-  private Set<WordDto> words;
+public class FindByIdServiceResponse implements Serializable {
+
+  @Serial private static final long serialVersionUID = -8522020286150901218L;
+  private Long id;
+  private String content;
+  private String description;
+  private String languageCode;
+  private Set<String> tags;
   private Set<MeaningDto> meanings;
 }

@@ -12,10 +12,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class SearchWordResponseMeaningDto implements Serializable {
+public class FindByIdResponse implements Serializable {
 
-  @Serial private static final long serialVersionUID = 402962395608344205L;
+  @Serial private static final long serialVersionUID = -7514241857769918306L;
+
   private Long id;
-  private String type;
-  private Set<String> descriptions;
+  private String content;
+  private String description;
+  private String languageCode;
+  private Set<String> tags;
+  private Set<FindByIdResponseMeaningDto> meanings;
 }

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SaveSentenceRequest implements Serializable {
   @Serial private static final long serialVersionUID = 4504918765701954888L;
-  private String id;
+  private Long id;
   private String content;
   private Set<String> tags;
 }

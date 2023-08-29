@@ -2,7 +2,7 @@ package com.usb.dictionary.tag.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.usb.dictionary.tag.model.Tag;
-import com.usb.dictionary.tag.repository.mongo.TagRepository;
+import com.usb.dictionary.tag.repository.neo4j.TagRepository;
 import com.usb.dictionary.tag.service.TagService;
 import com.usb.dictionary.tag.service.mapper.TagServiceMapper;
 import com.usb.dictionary.tag.service.request.SaveTagServiceRequest;

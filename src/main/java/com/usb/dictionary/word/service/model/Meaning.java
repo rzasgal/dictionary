@@ -9,10 +9,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.Relationship;
-import org.springframework.data.neo4j.core.schema.RelationshipId;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,7 +23,9 @@ import org.springframework.data.neo4j.core.schema.RelationshipId;
 public class Meaning implements Serializable {
 
   @Serial private static final long serialVersionUID = -8957695008400146560L;
-  @RelationshipId private Long id;
+  @GeneratedValue @Id private Long id;
+
+  private String type;
 
   @Property(name = "descriptions")
   private Set<String> descriptions;

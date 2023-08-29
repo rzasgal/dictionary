@@ -16,6 +16,5 @@ public class WordDto implements Serializable {
   private String content;
   private String languageCode;
   private String description;
-  private String type;
   private Set<String> tags;
 }

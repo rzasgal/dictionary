@@ -44,12 +44,9 @@ public class MeaningServiceImpl implements MeaningService {
                 .orElse(
                     Meaning.builder().descriptions(new HashSet<>()).words(new HashSet<>()).build());
     if (meaningDto.getDescriptions() != null) {
-      if (isEmpty(meaningDto.getDescriptions())) {
-        meaning.setWords(emptySet());
-      } else {
-        meaning.getDescriptions().addAll(meaningDto.getDescriptions());
-      }
+      meaning.setDescriptions(meaningDto.getDescriptions());
     }
+    meaning.setType(meaningDto.getType());
     meaning = this.meaningRepository.save(meaning);
     log.info(
         "message=\"meaning saved, id:\""
@@ -72,6 +69,7 @@ public class MeaningServiceImpl implements MeaningService {
           this.objectMapper.writeValueAsString(
               MeaningModifiedEvent.builder()
                   .id(meaning.getId())
+                  .type(meaning.getType())
                   .descriptions(meaning.getDescriptions())
                   .words(
                       !isEmpty(meaning.getWords())
