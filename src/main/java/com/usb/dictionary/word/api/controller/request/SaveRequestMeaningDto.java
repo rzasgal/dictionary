@@ -16,5 +16,6 @@ public class SaveRequestMeaningDto implements Serializable {
 
   @Serial private static final long serialVersionUID = 7377835145943035000L;
   private Long id;
+  private String type;
   private Set<String> descriptions;
 }
