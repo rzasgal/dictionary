@@ -1,16 +1,16 @@
 package com.usb.dictionary.security;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class SecurityConfiguration {
 
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    http.authorizeRequests().antMatchers("/hello/**").permitAll();
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.authorizeRequests()
         .anyRequest()
         .authenticated()
@@ -19,7 +19,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .and()
         .csrf()
         .disable()
-        .cors();
-    http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        .cors()
+        .and()
+        .sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    return http.build();
   }
 }
