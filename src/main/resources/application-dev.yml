@@ -1,13 +1,6 @@
 spring:
   kafka:
     bootstrap-servers: kafka:9091
-  data:
-    mongodb:
-      host: mongodb
-      port: 27017
-      username: dictuser
-      password: test
-      database: dictionary
   elasticsearch:
     uris: http://elasticsearch:9200
   neo4j:
